@@ -8,8 +8,6 @@ namespace BattlefieldSBKF.Models
     {
         Command GetCommand();
         string ExecuteCommand(Command command);
-        Command Connect(string host, int port);
-        Command Connect(int port);
         OceanGridBoard OceanGridBoard { get; set; }
         TargetGridBoard TargetGridBoard { get; set; }
     }

@@ -9,16 +9,6 @@ namespace BattlefieldSBKF.Models
         public OceanGridBoard OceanGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public Command Connect(string host, int port)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Command Connect(int port)
-        {
-            throw new NotImplementedException();
-        }
-
         public string ExecuteCommand(Command command)
         {
             throw new NotImplementedException();
