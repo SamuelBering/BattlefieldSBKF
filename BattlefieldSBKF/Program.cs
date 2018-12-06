@@ -1,4 +1,5 @@
 ﻿using System;
+using BattlefieldSBKF.Models;
 
 namespace BattlefieldSBKF
 {
@@ -6,7 +7,11 @@ namespace BattlefieldSBKF
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var oceanBoard = new OceanGridBoard(10);
+            oceanBoard.ShowBoard();
+            
+            Console.ReadKey();
+            
         }
     }
 }
