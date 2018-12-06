@@ -6,5 +6,10 @@ namespace BattlefieldSBKF.Models
 {
     public class PatrolBoat : Ship
     {
+        public PatrolBoat() : base('P', "Patrol Boat", false, 2)
+        {
+
+        }
+
     }
 }

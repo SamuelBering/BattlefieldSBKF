@@ -6,5 +6,10 @@ namespace BattlefieldSBKF.Models
 {
     public class Battleship : Ship
     {
+        public Battleship() : base('B', "Battleship", false, 4)
+        {
+            
+        }
+       
     }
 }

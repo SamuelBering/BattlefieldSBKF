@@ -6,5 +6,9 @@ namespace BattlefieldSBKF.Models
 {
     public class Destroyer : Ship
     {
+        public Destroyer() : base('D', "Destroyer", false, 3)
+        {
+
+        }
     }
 }
