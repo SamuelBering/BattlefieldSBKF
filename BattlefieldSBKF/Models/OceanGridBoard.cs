@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BattlefieldSBKF.Models;
 
 namespace BattlefieldSBKF.Models
 {
@@ -14,7 +12,7 @@ namespace BattlefieldSBKF.Models
 
     public class OceanGridBoard: GridBoard
     {
-        private readonly IEnumerable<Ship> _ships;
+        private readonly IList<Ship> _ships;
         
         public OceanGridBoard(int gridSide) : base(gridSide)
         {
@@ -145,23 +143,37 @@ namespace BattlefieldSBKF.Models
 
         public string Fire(int gridIndex)
         {
-            // Kolla om det är en träff och i så fall vilken båt
+            
+            if (gridIndex < 0 || gridIndex > Grid.Length - 1)
+            {
+                throw new ArgumentException("Index out of range!");
+            }
 
             if (!Char.IsLower(Grid[gridIndex]))
             {
                 Grid[gridIndex] = Char.ToLower(Grid[gridIndex]);
-                var numOfHits = Grid.Count(x => x.Equals(Grid[gridIndex]));
 
-                return $"Träff. {_ships.Single(s => s.Symbol == Grid[gridIndex]).Name}";
+                var ship = _ships.Single(s => s.Symbol == Char.ToUpper(Grid[gridIndex]) && s.IsDestroyed == false);
+                ship.Length -= 1;
+                
+                if (ship.Length == 0)
+                {
+                    ship.IsDestroyed = true;
+                    return $"Du sänkte mitt {ship.Name}";
+                }
+
+                return $"Träff. {ship.Name}";
             }
            
-            return "miss";
+            return "Miss";
         }
 
-        //private bool IsSunk()
-        //{
+        public bool IsAllShipsSunken()
+        {
+            return _ships.All(x => x.IsDestroyed);
+        }
 
-        //}
+        
 
 
     }

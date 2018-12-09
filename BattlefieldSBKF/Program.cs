@@ -7,10 +7,7 @@ namespace BattlefieldSBKF
     {
         static void Main(string[] args)
         {
-            var oceanBoard = new OceanGridBoard(10);
-            oceanBoard.ShowBoard();
-
-            Console.ReadKey();
+           
 
         }
     }
