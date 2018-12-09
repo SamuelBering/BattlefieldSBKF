@@ -6,7 +6,13 @@ namespace BattlefieldSBKF.Models
 {
     public interface IBattleShipProtocol
     {
-        Command ParseTcpCommand(string tcpCommand);
-        string ParseCommand(Command command);
+        string ProtocolName { get; }
+
+        Command GetCommand(string tcpCommand);
+        string GetTcpCommand(Command command);
+
+        Response GetResponse(string tcpResponse);
+        string GetTcpResponse(Response response);
+
     }
 }
