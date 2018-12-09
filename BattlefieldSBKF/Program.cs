@@ -9,9 +9,9 @@ namespace BattlefieldSBKF
         {
             var oceanBoard = new OceanGridBoard(10);
             oceanBoard.ShowBoard();
-            
+
             Console.ReadKey();
-            
+
         }
     }
 }

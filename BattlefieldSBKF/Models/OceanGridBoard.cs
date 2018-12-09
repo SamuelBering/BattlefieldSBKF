@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using BattlefieldSBKF.Models;
 
 namespace BattlefieldSBKF.Models
@@ -28,7 +29,7 @@ namespace BattlefieldSBKF.Models
             Initialize();
         }
 
-        public List<int> TempIndexArray { get; set; } = new List<int>();
+        private List<int> TempIndexArray { get; set; } = new List<int>();
 
         private bool DrawShip(Ship ship, int gridIndex)
         {
@@ -142,7 +143,25 @@ namespace BattlefieldSBKF.Models
             }
         }
 
+        public string Fire(int gridIndex)
+        {
+            // Kolla om det är en träff och i så fall vilken båt
 
+            if (!Char.IsLower(Grid[gridIndex]))
+            {
+                Grid[gridIndex] = Char.ToLower(Grid[gridIndex]);
+                var numOfHits = Grid.Count(x => x.Equals(Grid[gridIndex]));
+
+                return $"Träff. {_ships.Single(s => s.Symbol == Grid[gridIndex]).Name}";
+            }
+           
+            return "miss";
+        }
+
+        //private bool IsSunk()
+        //{
+
+        //}
 
 
     }
