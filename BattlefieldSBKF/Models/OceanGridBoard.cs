@@ -62,7 +62,7 @@ namespace BattlefieldSBKF.Models
         {
             for (int i = 0; i < ship.Length; i++)
             {
-                if (Grid[gridIndex] == 'o')
+                if (Grid[gridIndex] == base.OceanSymbol)
                 {
                     TempIndexArray.Add(gridIndex);
 
@@ -102,8 +102,6 @@ namespace BattlefieldSBKF.Models
                 {
                    result = DrawShip(ship, GetRandomIndex()); 
                 }
-                
-
             }
 
         }
@@ -123,23 +121,7 @@ namespace BattlefieldSBKF.Models
             return rnd.Next(base.Grid.Length);
         }
 
-        public void ShowBoard()
-        {
-            int k = 10;
-            int d = 0;
-            for (int i = 0; i < 10; i++)
-            {
-
-                for (int j=d; j < k; j++)
-                {
-                    Console.Write(base.Grid[j]);
-                }
-
-                Console.WriteLine();
-                k += 10;
-                d += 10;
-            }
-        }
+        
 
         public string Fire(int gridIndex)
         {
@@ -149,7 +131,7 @@ namespace BattlefieldSBKF.Models
                 throw new ArgumentException("Index out of range!");
             }
 
-            if (!Char.IsLower(Grid[gridIndex]))
+            if (!Char.IsLower(Grid[gridIndex]) && Grid[gridIndex] != OceanSymbol)
             {
                 Grid[gridIndex] = Char.ToLower(Grid[gridIndex]);
 
@@ -159,7 +141,7 @@ namespace BattlefieldSBKF.Models
                 if (ship.Length == 0)
                 {
                     ship.IsDestroyed = true;
-                    return $"Du sänkte mitt {ship.Name}";
+                    return $"Träff. Du sänkte min {ship.Name}";
                 }
 
                 return $"Träff. {ship.Name}";
