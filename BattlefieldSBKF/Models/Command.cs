@@ -4,12 +4,12 @@ namespace BattlefieldSBKF.Models
 {
     public class Command
     {
-        public string Name { get; set; }
+        public Commands Cmd { get; set; }
         public string[] Parameters { get; set; }
 
-        public Command(string name, params string[] parameters)
+        public Command(Commands cmd, params string[] parameters)
         {
-            Name = name;
+            Cmd = cmd;
             Parameters = parameters;
         }
     }

@@ -21,7 +21,7 @@ namespace BattlefieldSBKF.Models
             throw new NotImplementedException();
         }
 
-        public void Connect(int port)
+        public void Connect(int port, string localPlayerName)
         {
             throw new NotImplementedException();
         }

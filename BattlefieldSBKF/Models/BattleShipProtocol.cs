@@ -7,83 +7,226 @@ namespace BattlefieldSBKF.Models
 {
     public class BattleShipProtocol : IBattleShipProtocol
     {
-        public string HelloLocalPlayer()
+        Dictionary<string, Commands> CommandsDict;
+        Dictionary<string, Responses> ResponsesDict;
+        Dictionary<Commands, string> TcpCommandsDict;
+        Dictionary<Responses, string> TcpResponsesDict;
+
+        public string ProtocolName { get; } = "BATTLESHIP/1.0";
+
+        public BattleShipProtocol()
         {
-            return $"220";
+            CreateCommandsDict();
+            CreateResponsesDict();
         }
 
-        public string LocalPlayerStart(string localPlayerName)
+        void CreateCommandsDict()
         {
-            return $"222 Me, player {localPlayerName}, will start";
+            CommandsDict = new Dictionary<string, Commands>()
+            {
+                {"HELLO",Commands.Hello },
+                {"START", Commands.Start },
+                {"FIRE",Commands.Fire },
+                 {"HELP", Commands.Help },
+                {"QUIT",Commands.Quit }
+            };
+
+            TcpCommandsDict = new Dictionary<Commands, string>();
+            foreach (var cmdIG in CommandsDict)
+            {
+                TcpCommandsDict.Add(cmdIG.Value, cmdIG.Key);
+            }
         }
 
-        public string GetTcpAnswerCode(AnswerCode answerCode)
+        void CreateResponsesDict()
         {
-            throw new NotImplementedException();
+            ResponsesDict = new Dictionary<string, Responses>()
+            {
+                {"210", Responses.Protocol },
+                {"220", Responses.PlayerName },
+                {"221", Responses.ClientStarts },
+                {"222", Responses.HostStarts },
+                {"230", Responses.Miss },
+                {"241", Responses.HitCarrier },
+                {"242", Responses.HitBattleship },
+                {"243", Responses.HitDestroyer },
+                {"244", Responses.HitSubmarine },
+                {"245", Responses.HitPatrolBoat },
+                {"251", Responses.SunkCarrier },
+                {"252", Responses.SunkBattleship },
+                {"253", Responses.SunkDestroyer },
+                {"254", Responses.SunkSubmarine },
+                {"255", Responses.SunkPatrolBoat },
+                {"260", Responses.YouWin },
+                {"270", Responses.ConnectionClosed },
+                {"500", Responses.SyntaxError },
+                {"501", Responses.SequenceError },
+            };
+
+            TcpResponsesDict = new Dictionary<Responses, string>();
+            foreach (var respIG in ResponsesDict)
+            {
+                TcpResponsesDict.Add(respIG.Value, respIG.Key);
+            }
         }
 
-        public string GetTcpCommand(Command command)
+
+        public Response GetResponse(string tcpResponse)
         {
-            throw new NotImplementedException();
-        }
+            var substrings = tcpResponse.Split(' ');
 
-        public AnswerCode GetAnswerCode(string tcpAnswerCode)
-        {
-            var substrings = tcpAnswerCode.Split(' ');
-            bool success = false;
+            var key = substrings[0];
+            Response response = null;
 
-            if (tcpAnswerCode.ToLower() == ServerConnected().ToLower())
-                success = true;
-            else if (substrings[0] == HelloLocalPlayer())
-                success = true;
+            if (ResponsesDict.ContainsKey(key))
+            {
+                var responseEnum = ResponsesDict[key];
 
-            if (success)
-                return new AnswerCode(substrings[0], substrings.Length > 1 ? 
-                    string.Join(' ', substrings.Skip(1).Take(substrings.Length - 1).ToArray()) : null);
+                switch (responseEnum)
+                {
+                    case Responses.Protocol:
+                        if (substrings.Length == 2 && substrings[1] == this.ProtocolName)
+                        {
+                            response = new Response(responseEnum, substrings[1]);
+                        }
+                        else
+                            throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Parameter for protocol name is invalid.");
+                        break;
+                    case Responses.PlayerName:
+                        if (substrings.Length > 1 && substrings[1].Length > 0)
+                        {
+                            response = new Response(responseEnum, string.Join(' ', substrings.Skip(1).Take(substrings.Length - 1).ToArray()));
+                        }
+                        else
+                            throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Parameter for Name is invalid.");
+                        break;
+                }
+
+                return response;
+            }
             else
-                throw new CantCreateAnswerCodeException($"Can't create AnswerCode of input string {tcpAnswerCode}. Syntax error.");
+            {
+                throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Key: {key} doesn't exists.");
+            }
 
+        
+        }
+
+        public string GetTcpResponse(Response response)
+        {
+            string tcpResponse = null;
+
+
+            switch (response.Resp)
+            {
+                case Responses.Protocol:
+                    if (response.Parameter == this.ProtocolName)
+                    {
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {response.Parameter}";
+                    }
+                    else
+                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} for protocol name is invalid.");
+                    break;
+
+                case Responses.PlayerName:
+                    if (response.Parameter != null && response.Parameter.Length > 0)
+                    {
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {response.Parameter}";
+                    }
+                    else
+                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} for Name is invalid.");
+                    break;
+                default:
+                    throw new CantCreateResponseException($"Can't create tcp response of {response.Resp} because it's not implemented.");
+
+            }
+
+            return tcpResponse;
         }
 
         public Command GetCommand(string tcpCommand)
         {
             var substrings = tcpCommand.Split(' ');
-            bool success = false;
 
-            if (substrings[0].ToLower() == HelloCmd().ToLower())
-                success = true;
-            else if (substrings[0].ToLower() == StartCmd().ToLower() && substrings.Length == 1)
-                success = true;
+            var key = substrings[0];
+            Command command = null;
 
-            if (success)
-                return new Command(substrings[0].ToUpper(), substrings.Length > 1 ? substrings.Skip(1).Take(substrings.Length - 1).ToArray() : null);
+            if (CommandsDict.ContainsKey(key))
+            {
+                var commandEnum = CommandsDict[key];
+
+                switch (commandEnum)
+                {
+                    case Commands.Hello:
+                        if (substrings.Length > 1 && substrings[1].Length > 0)
+                        {
+                            command = new Command(commandEnum, substrings.Skip(1).Take(substrings.Length - 1).ToArray());
+                        }
+                        else
+                            throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Parameter for Name is invalid.");
+                        break;
+                    case Commands.Start:
+                        if (substrings.Length == 1)
+                        {
+                            command = new Command(commandEnum, null);
+                        }
+                        else
+                            throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. No parameter is allowed for this command.");
+                        break;
+                    case Commands.Fire:
+                        break;
+                    case Commands.Help:
+                        break;
+                    case Commands.Quit:
+                        break;
+                }
+
+                return command;
+            }
             else
-                throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Syntax error."); 
+            {
+                throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Key: {key} doesn't exists.");
+            }
+
         }
 
-        public string HelloCmd()
+        public string GetTcpCommand(Command command)
         {
-            return "HELLO";
+
+            string tcpCommand = null;
+
+
+            switch (command.Cmd)
+            {
+                case Commands.Hello:
+                    if (command.Parameters.Length > 0 && command.Parameters[0].Length > 0)
+                    {
+                        tcpCommand = $"{TcpCommandsDict[command.Cmd]} {string.Join(' ', command.Parameters)}";
+                    }
+                    else
+                        throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Invalid parameters.");
+                    break;
+                case Commands.Start:
+                    if (command.Parameters == null)
+                    {
+                        tcpCommand = $"{TcpCommandsDict[command.Cmd]}";
+                    }
+                    else
+                        throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. No parameter is allowed for this command.");
+                    break;
+                case Commands.Fire:
+                    break;
+                case Commands.Help:
+                    break;
+                case Commands.Quit:
+                    break;
+            }
+
+            return tcpCommand;
+
+
         }
 
-        public string StartCmd()
-        {
-            return "START";
-        }
 
-        public string RemotePlayerStart(string remotePlayerName)
-        {
-            return $"221 You, player {remotePlayerName}, will start";
-        }
-
-        public string ServerConnected()
-        {
-            return "210 BATTLESHIP/1.0";
-        }
-
-        public string Start()
-        {
-            return "START\r\n";
-        }
     }
 }

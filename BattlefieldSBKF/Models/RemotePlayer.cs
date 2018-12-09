@@ -19,7 +19,7 @@ namespace BattlefieldSBKF.Models
         public string Name { get; set; }
 
         public RemotePlayer(IBattleShipProtocol battleShipProtocol)
-        {           
+        {
             BattleShipProtocol = battleShipProtocol;
         }
 
@@ -45,25 +45,27 @@ namespace BattlefieldSBKF.Models
             _reader = new StreamReader(networkStream, Encoding.UTF8);
             _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
 
-            string answerCodeFromServer = _reader.ReadLine();
+            Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
 
+            if (response.Resp != Responses.Protocol)
+                throw new UnExpectedAnswerCodeException($"Unexpected response {response.Resp}");
 
-            AnswerCode answerCode = BattleShipProtocol.GetAnswerCode(answerCodeFromServer);
+            Console.WriteLine(response.Resp + " " + response.Parameter);
 
-            if (answerCode.Name!="210")
-                throw new UnExpectedAnswerCodeException($"Unexpected answer code: {answerCodeFromServer}. Expected answer code: {BattleShipProtocol.ServerConnected()}");
+            Command command = new Command(Commands.Hello, localPlayerName);
+            
+            _writer.WriteLine(BattleShipProtocol.GetTcpCommand(command));
 
-            Console.WriteLine(answerCodeFromServer);
+             response = BattleShipProtocol.GetResponse(_reader.ReadLine());
 
-            string helloTcpCommand = $"{BattleShipProtocol.HelloCmd()} {localPlayerName}";
-            _writer.WriteLine(helloTcpCommand);
+            Console.WriteLine(response.Resp + " " + response.Parameter);
 
             //if (answerCode.)
 
 
         }
 
-        public void Connect(int port)
+        public void Connect(int port, string localPlayerName)
         {
             TcpListener listener;
 
@@ -81,15 +83,24 @@ namespace BattlefieldSBKF.Models
             _reader = new StreamReader(networkStream, Encoding.UTF8);
             _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
 
-            string serverConnectedAnswerCode = BattleShipProtocol.ServerConnected();
+            Response response = new Response(Responses.Protocol, BattleShipProtocol.ProtocolName);
 
-            _writer.WriteLine(serverConnectedAnswerCode);
-            string tcpCommand = _reader.ReadLine();
-            Command command = BattleShipProtocol.GetCommand(tcpCommand);
-            if (command.Name != "HELLO")
-                throw new UnExpectedCommandException($"Unexpected command: {command.Name}. Expected command: {BattleShipProtocol.HelloCmd()}");
+            //string serverConnectedAnswerCode = BattleShipProtocol.ServerConnected();
 
-            Console.WriteLine(tcpCommand);
+            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
+
+            Command command = BattleShipProtocol.GetCommand(_reader.ReadLine());
+
+          
+            if (command.Cmd != Commands.Hello)
+                throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
+
+            Console.WriteLine(command.Cmd+" "+string.Join(' ', command.Parameters));
+
+            response = new Response(Responses.PlayerName, localPlayerName);
+
+            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
+
         }
 
         public string ExecuteCommand(Command command)

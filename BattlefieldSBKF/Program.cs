@@ -1,6 +1,5 @@
 ﻿using BattlefieldSBKF.Models;
 using System;
-using BattlefieldSBKF.Models;
 
 namespace BattlefieldSBKF
 {

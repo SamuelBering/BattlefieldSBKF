@@ -28,7 +28,7 @@ namespace BattlefieldSBKF.Models
             try
             {
                 if (_IsServer)
-                    _remotePlayer.Connect(_port);
+                    _remotePlayer.Connect(_port, _localPlayer.Name);
                 else
                     _remotePlayer.Connect(_host, _port, _localPlayer.Name);
 

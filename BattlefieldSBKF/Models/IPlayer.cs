@@ -9,7 +9,7 @@ namespace BattlefieldSBKF.Models
         Command GetCommand();
         string ExecuteCommand(Command command);
         void Connect(string host, int port, string localPlayerName);
-        void Connect(int port);
+        void Connect(int port, string localPlayerName);
 
         string Name { get; set; }
         IBattleShipProtocol BattleShipProtocol { get; set; }

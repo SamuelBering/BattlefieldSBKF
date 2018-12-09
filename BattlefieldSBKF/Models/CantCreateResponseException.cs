@@ -4,18 +4,18 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class CantCreateAnswerCodeException : Exception
+    public class CantCreateResponseException : Exception
     {
-        public CantCreateAnswerCodeException()
+        public CantCreateResponseException()
         {
         }
 
-        public CantCreateAnswerCodeException(string message)
+        public CantCreateResponseException(string message)
             : base(message)
         {
         }
 
-        public CantCreateAnswerCodeException(string message, Exception inner)
+        public CantCreateResponseException(string message, Exception inner)
             : base(message, inner)
         {
         }
