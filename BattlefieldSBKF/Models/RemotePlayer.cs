@@ -45,24 +45,21 @@ namespace BattlefieldSBKF.Models
             _reader = new StreamReader(networkStream, Encoding.UTF8);
             _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
 
-            Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
+            Response response = GetResponse();
 
             if (response.Resp != Responses.Protocol)
-                throw new UnExpectedAnswerCodeException($"Unexpected response {response.Resp}");
+                throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
 
             Console.WriteLine(response.Resp + " " + response.Parameter);
 
-            Command command = new Command(Commands.Hello, localPlayerName);
-            
-            _writer.WriteLine(BattleShipProtocol.GetTcpCommand(command));
+            response = ExecuteCommand(Commands.Hello, localPlayerName);
 
-             response = BattleShipProtocol.GetResponse(_reader.ReadLine());
-
+            if (response.Resp != Responses.PlayerName)
+                throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
+          
             Console.WriteLine(response.Resp + " " + response.Parameter);
 
-            //if (answerCode.)
-
-
+            response = ExecuteCommand(Commands.Start, null);
         }
 
         public void Connect(int port, string localPlayerName)
@@ -83,34 +80,59 @@ namespace BattlefieldSBKF.Models
             _reader = new StreamReader(networkStream, Encoding.UTF8);
             _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
 
-            Response response = new Response(Responses.Protocol, BattleShipProtocol.ProtocolName);
+            Command command = ExecuteResponse(Responses.Protocol);
 
-            //string serverConnectedAnswerCode = BattleShipProtocol.ServerConnected();
-
-            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
-
-            Command command = BattleShipProtocol.GetCommand(_reader.ReadLine());
-
-          
             if (command.Cmd != Commands.Hello)
                 throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
 
-            Console.WriteLine(command.Cmd+" "+string.Join(' ', command.Parameters));
+            Console.WriteLine(command.Cmd + " " + string.Join(' ', command.Parameters));
 
-            response = new Response(Responses.PlayerName, localPlayerName);
 
-            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
+            command = ExecuteResponse(Responses.PlayerName, localPlayerName);
+
+            if (command.Cmd != Commands.Start)
+                throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
+
+            Console.WriteLine(command.Cmd);
+          
 
         }
 
-        public string ExecuteCommand(Command command)
+        public Response ExecuteCommand(Command command)
         {
-            throw new NotImplementedException();
+            var tcpCommand = BattleShipProtocol.GetTcpCommand(command);
+            _writer.WriteLine(tcpCommand);
+            Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
+            return response;
+        }
+
+        public Response ExecuteCommand(Commands cmd, params string[] parameters)
+        {
+            Command command = new Command(cmd, parameters);
+            return ExecuteCommand(command);
         }
 
         public Command GetCommand()
         {
             throw new NotImplementedException();
         }
+
+        public Response GetResponse()
+        {
+            return BattleShipProtocol.GetResponse(_reader.ReadLine());
+        }
+
+        public Command ExecuteResponse(Responses resp, string parameter = null)
+        {
+            Response response = new Response(resp, parameter);
+
+            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
+
+            Command command = BattleShipProtocol.GetCommand(_reader.ReadLine());
+
+            return command;
+        }
     }
+
+
 }

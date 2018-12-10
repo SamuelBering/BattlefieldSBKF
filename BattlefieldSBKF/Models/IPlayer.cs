@@ -7,7 +7,10 @@ namespace BattlefieldSBKF.Models
     public interface IPlayer
     {
         Command GetCommand();
-        string ExecuteCommand(Command command);
+        Response ExecuteCommand(Command command);
+        Response ExecuteCommand(Commands cmd, params string[] parameters);
+        Command ExecuteResponse(Responses resp, string parameter);
+        Response GetResponse();
         void Connect(string host, int port, string localPlayerName);
         void Connect(int port, string localPlayerName);
 

@@ -26,12 +26,28 @@ namespace BattlefieldSBKF.Models
             throw new NotImplementedException();
         }
 
-        public string ExecuteCommand(Command command)
+        
+        public Command GetCommand()
         {
             throw new NotImplementedException();
         }
 
-        public Command GetCommand()
+        public Response ExecuteCommand(Command command)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Response ExecuteCommand(Commands cmd, params string[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Response GetResponse()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Command ExecuteResponse(Responses resp, string parameter)
         {
             throw new NotImplementedException();
         }
