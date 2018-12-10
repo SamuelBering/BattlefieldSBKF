@@ -109,7 +109,7 @@ namespace BattlefieldSBKF.Models
                 throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Key: {key} doesn't exists.");
             }
 
-        
+
         }
 
         public string GetTcpResponse(Response response)
@@ -120,9 +120,9 @@ namespace BattlefieldSBKF.Models
             switch (response.Resp)
             {
                 case Responses.Protocol:
-                    if (response.Parameter == this.ProtocolName)
+                    if (response.Parameter == null || response.Parameter == ProtocolName)
                     {
-                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {response.Parameter}";
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {ProtocolName}";
                     }
                     else
                         throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} for protocol name is invalid.");

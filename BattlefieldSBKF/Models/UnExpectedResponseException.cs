@@ -4,18 +4,18 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class UnExpectedAnswerCodeException : Exception
+    public class UnExpectedResponseException : Exception
     {
-        public UnExpectedAnswerCodeException()
+        public UnExpectedResponseException()
         {
         }
 
-        public UnExpectedAnswerCodeException(string message)
+        public UnExpectedResponseException(string message)
             : base(message)
         {
         }
 
-        public UnExpectedAnswerCodeException(string message, Exception inner)
+        public UnExpectedResponseException(string message, Exception inner)
             : base(message, inner)
         {
         }
