@@ -12,10 +12,14 @@ namespace BattlefieldSBKF.Models
         string _host;
         int _port;
 
-        public BattleShipGameEngine(IPlayer localPlayer, IPlayer remotePlayer, string host, int port)
+        public BattleShipGameEngine(IPlayer localPlayer, IPlayer remotePlayer)
         {
             _localPlayer = localPlayer;
             _remotePlayer = remotePlayer;
+        }
+
+        void Init(string host, int port)
+        {
             _host = host;
             _port = port;
 
@@ -25,7 +29,6 @@ namespace BattlefieldSBKF.Models
             _localPlayer.IsServer = _IsServer;
             _remotePlayer.IsServer = !_IsServer;
         }
-
 
         void ExecuteLocalPlayerTurnAsServer(ref bool endGame)
         {
@@ -189,9 +192,8 @@ namespace BattlefieldSBKF.Models
 
         }
 
-        public void Run()
+        void RunGame()
         {
-        
             bool localPlayerStart = true;
 
             if (_IsServer)
@@ -213,7 +215,43 @@ namespace BattlefieldSBKF.Models
                     localPlayerStart = false;
                 RunAsClient(localPlayerStart);
             }
+        }
 
+
+        void GetUserInfo(out string host, out int port, out string playerName)
+        {
+            string na;
+            string ho;
+            int po;
+            bool isValidPortNumber;
+
+            do
+            {
+                Console.Write("Ange player name: ");
+                na = Console.ReadLine();
+                Console.Write("Ange host: ");
+                ho = Console.ReadLine();
+                Console.Write("Ange port: ");
+                isValidPortNumber = int.TryParse(Console.ReadLine(), out po);
+                if (isValidPortNumber && na.Length > 0)
+                    break;
+                Console.WriteLine("Port och eller spelarens namn är ej korrekt angiven.");
+            }
+            while (true);
+
+
+            host = ho;
+            port = po;
+            playerName = na;
+        }
+
+        public void Run()
+        {
+            Console.Clear();
+            GetUserInfo(out string host, out int port, out string playerName);
+            _localPlayer.Name = playerName;
+            Init(host, port);
+            RunGame();
         }
 
 

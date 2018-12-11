@@ -12,6 +12,10 @@ namespace BattlefieldSBKF.Models
         public string Name { get; set; }
         public bool IsServer { get; set; }
 
+        public LocalPlayer()
+        {
+        }
+
         public LocalPlayer(string name)
         {
             Name = name;
@@ -45,21 +49,21 @@ namespace BattlefieldSBKF.Models
 
             if (IsServer)
             {
-                if (input == "quit")
+                if (input.ToLower() == "quit")
                 {
                     response = new Response(Responses.ConnectionClosed, null);
                 }
                 else
-                    command = new Command(Commands.Fire, input.Substring(0, 1), input.Substring(1));
+                    command = new Command(Commands.Fire, input.Substring(0, 1).ToUpper(), input.Substring(1));
             }
             else
             {
-                if (input == "quit")
+                if (input.ToLower() == "quit")
                 {
                     command = new Command(Commands.Quit, null);
                 }
                 else
-                    command = new Command(Commands.Fire, input.Substring(0, 1), input.Substring(1));
+                    command = new Command(Commands.Fire, input.Substring(0, 1).ToUpper(), input.Substring(1));
             }
 
         }
