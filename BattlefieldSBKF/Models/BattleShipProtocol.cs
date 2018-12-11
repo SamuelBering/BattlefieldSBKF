@@ -14,6 +14,11 @@ namespace BattlefieldSBKF.Models
         Dictionary<string, int> YcordinateDict;
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
+        string _clientStarts = "Client Starts";
+        string _hostsStarts = "Host Starts";
+        string _miss = "Miss!";
+        string _connectionClosed = "Connection closed";
+
 
         public BattleShipProtocol()
         {
@@ -118,6 +123,20 @@ namespace BattlefieldSBKF.Models
                         else
                             throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Parameter for Name is invalid.");
                         break;
+                    case Responses.HostStarts:
+                        string info = null;
+                        if (substrings.Length > 1)
+                            info = string.Join(' ', substrings.Skip(1).Take(substrings.Length - 1).ToArray());
+                        response = new Response(responseEnum, info);
+                        break;
+                    case Responses.Miss:
+                        response = new Response(responseEnum, _miss);
+                        break;
+                    case Responses.ConnectionClosed:
+                        response = new Response(responseEnum, _connectionClosed);
+                        break;
+                    default:
+                        throw new NotImplementedException($"Can't create response. Response: {responseEnum} is not implemented.");
                 }
 
                 return response;
@@ -138,7 +157,7 @@ namespace BattlefieldSBKF.Models
             switch (response.Resp)
             {
                 case Responses.Protocol:
-                    if (response.Parameter == null || response.Parameter == ProtocolName)
+                    if (response.Parameter == null || response.Parameter.ToLower() == ProtocolName.ToLower())
                     {
                         tcpResponse = $"{TcpResponsesDict[response.Resp]} {ProtocolName}";
                     }
@@ -154,6 +173,37 @@ namespace BattlefieldSBKF.Models
                     else
                         throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} for Name is invalid.");
                     break;
+
+                case Responses.HostStarts:
+                    if (response.Parameter == null || response.Parameter.ToLower() == _hostsStarts.ToLower())
+                    {
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hostsStarts}";
+                    }
+                    else
+                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    break;
+
+                case Responses.ClientStarts:
+                    if (response.Parameter == null || response.Parameter.ToLower() == _clientStarts.ToLower())
+                    {
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_clientStarts}";
+                    }
+                    else
+                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    break;
+
+                case Responses.Miss:
+                    if (response.Parameter == null || response.Parameter.ToLower() == _miss.ToLower())
+                    {
+                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_miss}";
+                    }
+                    else
+                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    break;
+                case Responses.ConnectionClosed:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_connectionClosed}";
+                    break;
+
                 default:
                     throw new CantCreateResponseException($"Can't create tcp response of {response.Resp} because it's not implemented.");
 
@@ -192,11 +242,36 @@ namespace BattlefieldSBKF.Models
                             throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. No parameter is allowed for this command.");
                         break;
                     case Commands.Fire:
-                        break;
-                    case Commands.Help:
+                        if (substrings.Length > 1)
+                        {
+                            string yCordinate = substrings[1].Substring(0, 1), xCordinate = substrings[1].Substring(1);
+
+                            bool xCordIsValidNumber = int.TryParse(xCordinate, out int xCordInt);
+
+                            if (YcordinateDict.ContainsKey(yCordinate) && (xCordIsValidNumber && xCordInt >= 1 && xCordInt <= 10))
+                            {
+                                var parameters = new List<string>
+                                {
+                                    yCordinate,
+                                    xCordinate
+                                };
+                                if (substrings.Length > 2)
+                                    parameters.AddRange(substrings.Skip(2).Take(substrings.Length - 2).ToList());
+
+                                command = new Command(commandEnum, parameters.ToArray());
+                            }
+                            else
+                                throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Parameters for cordinates are invalid.");
+                        }
+                        else
+                            throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Must be at least one parameter for this command.");
                         break;
                     case Commands.Quit:
+                        command = new Command(commandEnum, null);
                         break;
+                    default:
+                        throw new NotImplementedException($"Can't create command. Command: {command.Cmd} is not implemented.");
+
                 }
 
                 return command;
@@ -235,13 +310,13 @@ namespace BattlefieldSBKF.Models
                 case Commands.Fire:
                     if (command.Parameters.Length == 2 || command.Parameters.Length == 3)
                     {
-                        string yCordinate = command.Parameters[0], message=command.Parameters.Length==3 ? command.Parameters[2] : null;
+                        string yCordinate = command.Parameters[0], message = command.Parameters.Length == 3 ? command.Parameters[2] : null;
                         bool xCordIsValidNumber = int.TryParse(command.Parameters[1], out int xCordinate);
 
                         if (YcordinateDict.ContainsKey(yCordinate) && (xCordIsValidNumber && xCordinate >= 1 && xCordinate <= 10))
                         {
                             tcpCommand = $"{TcpCommandsDict[command.Cmd]} {yCordinate}{xCordinate}";
-                            tcpCommand += message != null ? " "+message : "";   
+                            tcpCommand += message != null ? " " + message : "";
                         }
                         else
                             throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Parameters for cordinates are invalid.");
@@ -250,10 +325,11 @@ namespace BattlefieldSBKF.Models
                     else
                         throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Number of parameters must be two or three.");
                     break;
-                case Commands.Help:
-                    break;
                 case Commands.Quit:
+                    tcpCommand = $"{TcpCommandsDict[command.Cmd]}";
                     break;
+                default:
+                    throw new NotImplementedException($"Can't create tcp command. Command: {command.Cmd} is not implemented.");
             }
 
             return tcpCommand;

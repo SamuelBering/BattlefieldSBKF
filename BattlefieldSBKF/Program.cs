@@ -50,7 +50,6 @@ namespace BattlefieldSBKF
 
             battleShipGameEngine.Run();
 
-            Console.ReadKey();
         }
     }
 }

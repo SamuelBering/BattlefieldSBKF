@@ -66,7 +66,13 @@ namespace BattlefieldSBKF.Models
 
         public Response ExecuteCommand(Command command, bool waitForResponse)
         {
-            throw new NotImplementedException();
+            if (command.Cmd == Commands.Fire)
+            {
+                Console.WriteLine("(boom)");
+                return new Response(Responses.Miss, null);
+            }
+            else
+                throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
         }
 
         public Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters)
@@ -83,12 +89,24 @@ namespace BattlefieldSBKF.Models
 
         public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter)
         {
-            throw new NotImplementedException();
+            return ExecuteResponse(new Response(resp, parameter), waitForCommand);
         }
 
         public Command ExecuteResponse(Response response, bool waitForCommand)
         {
-            throw new NotImplementedException();
+            Command command = null;
+
+            if (response.Resp == Responses.Miss)
+            {
+                Console.WriteLine("Du missade!");
+            }
+            else
+                throw new NotImplementedException();
+
+            if (waitForCommand)
+                command = GetCommand();
+
+            return command;
         }
     }
 }

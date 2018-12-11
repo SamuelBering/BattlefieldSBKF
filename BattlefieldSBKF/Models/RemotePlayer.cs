@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -87,6 +88,8 @@ namespace BattlefieldSBKF.Models
             if (command.Cmd != Commands.Hello)
                 throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
 
+            this.Name = string.Join(' ', command.Parameters);
+
             Console.WriteLine(command.Cmd + " " + string.Join(' ', command.Parameters));
 
 
@@ -128,7 +131,18 @@ namespace BattlefieldSBKF.Models
 
         public void GetCommandOrResponse(out Command command, out Response response)
         {
-            throw new NotImplementedException();
+            command = null;
+            response = null;
+
+            var tcpString = _reader.ReadLine();
+            try
+            {
+                command = BattleShipProtocol.GetCommand(tcpString);
+            }
+            catch 
+            {
+                response = BattleShipProtocol.GetResponse(tcpString);
+            }
         }
 
 
@@ -149,7 +163,7 @@ namespace BattlefieldSBKF.Models
         }
 
         public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter = null)
-        {         
+        {
             Response response = new Response(resp, parameter);
             return ExecuteResponse(response, waitForCommand);
         }
