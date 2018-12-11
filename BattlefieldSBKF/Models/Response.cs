@@ -12,5 +12,10 @@
             Parameter = parameter;
         }
 
+        public override string ToString()
+        {
+            return $"Response type: {Resp} Parameter: {Parameter}";
+        }
+
     }
 }

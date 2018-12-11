@@ -17,6 +17,8 @@ namespace BattlefieldSBKF.Models
         public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IBattleShipProtocol BattleShipProtocol { get; set; }
         public string Name { get; set; }
+        public bool IsServer { get; set; }
+
 
         public RemotePlayer(IBattleShipProtocol battleShipProtocol)
         {
@@ -52,14 +54,14 @@ namespace BattlefieldSBKF.Models
 
             Console.WriteLine(response.Resp + " " + response.Parameter);
 
-            response = ExecuteCommand(Commands.Hello, localPlayerName);
+            response = ExecuteCommand(Commands.Hello, true, localPlayerName);
 
             if (response.Resp != Responses.PlayerName)
                 throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
-          
+
             Console.WriteLine(response.Resp + " " + response.Parameter);
 
-            response = ExecuteCommand(Commands.Start, null);
+            response = ExecuteCommand(Commands.Start, false, null);
         }
 
         public void Connect(int port, string localPlayerName)
@@ -80,7 +82,7 @@ namespace BattlefieldSBKF.Models
             _reader = new StreamReader(networkStream, Encoding.UTF8);
             _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
 
-            Command command = ExecuteResponse(Responses.Protocol);
+            Command command = ExecuteResponse(Responses.Protocol, true);
 
             if (command.Cmd != Commands.Hello)
                 throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
@@ -88,28 +90,35 @@ namespace BattlefieldSBKF.Models
             Console.WriteLine(command.Cmd + " " + string.Join(' ', command.Parameters));
 
 
-            command = ExecuteResponse(Responses.PlayerName, localPlayerName);
+            command = ExecuteResponse(Responses.PlayerName, true, localPlayerName);
 
             if (command.Cmd != Commands.Start)
                 throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
 
             Console.WriteLine(command.Cmd);
-          
+
 
         }
 
-        public Response ExecuteCommand(Command command)
+        public Response ExecuteCommand(Command command, bool waitForResponse)
         {
             var tcpCommand = BattleShipProtocol.GetTcpCommand(command);
             _writer.WriteLine(tcpCommand);
-            Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
-            return response;
+
+            if (waitForResponse)
+            {
+                //Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
+                Response response = GetResponse();
+                return response;
+            }
+            else
+                return null;
         }
 
-        public Response ExecuteCommand(Commands cmd, params string[] parameters)
+        public Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters)
         {
             Command command = new Command(cmd, parameters);
-            return ExecuteCommand(command);
+            return ExecuteCommand(command, waitForResponse);
         }
 
         public Command GetCommand()
@@ -117,20 +126,32 @@ namespace BattlefieldSBKF.Models
             throw new NotImplementedException();
         }
 
+        public void GetCommandOrResponse(out Command command, out Response response)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public Response GetResponse()
         {
             return BattleShipProtocol.GetResponse(_reader.ReadLine());
         }
 
-        public Command ExecuteResponse(Responses resp, string parameter = null)
+        public Command ExecuteResponse(Response response, bool waitForCommand)
         {
-            Response response = new Response(resp, parameter);
-
+            Command command = null;
             _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
 
-            Command command = BattleShipProtocol.GetCommand(_reader.ReadLine());
+            if (waitForCommand)
+                command = BattleShipProtocol.GetCommand(_reader.ReadLine());
 
             return command;
+        }
+
+        public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter = null)
+        {         
+            Response response = new Response(resp, parameter);
+            return ExecuteResponse(response, waitForCommand);
         }
     }
 

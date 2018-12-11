@@ -11,6 +11,7 @@ namespace BattlefieldSBKF.Models
         Dictionary<string, Responses> ResponsesDict;
         Dictionary<Commands, string> TcpCommandsDict;
         Dictionary<Responses, string> TcpResponsesDict;
+        Dictionary<string, int> YcordinateDict;
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
 
@@ -18,6 +19,7 @@ namespace BattlefieldSBKF.Models
         {
             CreateCommandsDict();
             CreateResponsesDict();
+            CreateYcordinateDict();
         }
 
         void CreateCommandsDict()
@@ -70,6 +72,22 @@ namespace BattlefieldSBKF.Models
             }
         }
 
+        void CreateYcordinateDict()
+        {
+            YcordinateDict = new Dictionary<string, int>()
+            {
+              {"A", 1 },
+              {"B", 2 },
+              {"C", 3 },
+              {"D", 4 },
+              {"E", 5 },
+              {"F", 6 },
+              {"G", 7 },
+              {"H", 8 },
+              {"I", 9 },
+              {"J", 10 },
+            };
+        }
 
         public Response GetResponse(string tcpResponse)
         {
@@ -204,7 +222,7 @@ namespace BattlefieldSBKF.Models
                         tcpCommand = $"{TcpCommandsDict[command.Cmd]} {string.Join(' ', command.Parameters)}";
                     }
                     else
-                        throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Invalid parameters.");
+                        throw new CantCreateCommandException($"Can't create tcp tcp command of command {command.Cmd}. Invalid parameters.");
                     break;
                 case Commands.Start:
                     if (command.Parameters == null)
@@ -212,9 +230,25 @@ namespace BattlefieldSBKF.Models
                         tcpCommand = $"{TcpCommandsDict[command.Cmd]}";
                     }
                     else
-                        throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. No parameter is allowed for this command.");
+                        throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. No parameter is allowed for this command.");
                     break;
                 case Commands.Fire:
+                    if (command.Parameters.Length == 2 || command.Parameters.Length == 3)
+                    {
+                        string yCordinate = command.Parameters[0], message=command.Parameters.Length==3 ? command.Parameters[2] : null;
+                        bool xCordIsValidNumber = int.TryParse(command.Parameters[1], out int xCordinate);
+
+                        if (YcordinateDict.ContainsKey(yCordinate) && (xCordIsValidNumber && xCordinate >= 1 && xCordinate <= 10))
+                        {
+                            tcpCommand = $"{TcpCommandsDict[command.Cmd]} {yCordinate}{xCordinate}";
+                            tcpCommand += message != null ? " "+message : "";   
+                        }
+                        else
+                            throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Parameters for cordinates are invalid.");
+
+                    }
+                    else
+                        throw new CantCreateCommandException($"Can't create tcp command of command {command.Cmd}. Number of parameters must be two or three.");
                     break;
                 case Commands.Help:
                     break;

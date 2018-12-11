@@ -7,9 +7,11 @@ namespace BattlefieldSBKF.Models
     public interface IPlayer
     {
         Command GetCommand();
-        Response ExecuteCommand(Command command);
-        Response ExecuteCommand(Commands cmd, params string[] parameters);
-        Command ExecuteResponse(Responses resp, string parameter);
+        void GetCommandOrResponse(out Command command, out Response response);
+        Response ExecuteCommand(Command command, bool waitForResponse);
+        Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters);
+        Command ExecuteResponse(Response response, bool waitForCommand);
+        Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter);
         Response GetResponse();
         void Connect(string host, int port, string localPlayerName);
         void Connect(int port, string localPlayerName);
@@ -18,5 +20,7 @@ namespace BattlefieldSBKF.Models
         IBattleShipProtocol BattleShipProtocol { get; set; }
         OceanGridBoard OceanGridBoard { get; set; }
         TargetGridBoard TargetGridBoard { get; set; }
+        bool IsServer { get; set; }
+
     }
 }
