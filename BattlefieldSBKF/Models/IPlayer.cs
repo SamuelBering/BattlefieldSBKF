@@ -11,6 +11,7 @@ namespace BattlefieldSBKF.Models
         Response ExecuteCommand(Command command, bool waitForResponse);
         Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters);
         Command ExecuteResponse(Response response, bool waitForCommand);
+        Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand);
         Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter);
         Response GetResponse();
         void Connect(string host, int port, string localPlayerName);

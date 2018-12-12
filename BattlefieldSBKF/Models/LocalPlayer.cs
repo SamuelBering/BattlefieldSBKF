@@ -112,5 +112,10 @@ namespace BattlefieldSBKF.Models
 
             return command;
         }
+
+        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

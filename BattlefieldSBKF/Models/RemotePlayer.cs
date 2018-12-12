@@ -10,8 +10,10 @@ namespace BattlefieldSBKF.Models
 {
     public class RemotePlayer : IPlayer
     {
-        StreamReader _reader;
-        StreamWriter _writer;
+        //StreamReader _reader;
+        //StreamWriter _writer;
+        WrappedStreamReader _reader;
+        WrappedStreamWriter _writer;
         TcpClient _client;
 
         public OceanGridBoard OceanGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -45,8 +47,8 @@ namespace BattlefieldSBKF.Models
                 throw new ClientNotCreatedException($"Kan ej starta förbindelse. Port {port} troligtvis upptagen");
             }
             var networkStream = _client.GetStream();
-            _reader = new StreamReader(networkStream, Encoding.UTF8);
-            _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
+            _reader = new WrappedStreamReader(new StreamReader(networkStream, Encoding.UTF8), IsServer);
+            _writer = new WrappedStreamWriter(new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
             Response response = GetResponse();
 
@@ -80,8 +82,10 @@ namespace BattlefieldSBKF.Models
 
             _client = listener.AcceptTcpClient();
             var networkStream = _client.GetStream();
-            _reader = new StreamReader(networkStream, Encoding.UTF8);
-            _writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
+            //_reader = new StreamReader(networkStream, Encoding.UTF8);
+            //_writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
+            _reader = new WrappedStreamReader(new StreamReader(networkStream, Encoding.UTF8), IsServer);
+            _writer = new WrappedStreamWriter(new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
             Command command = ExecuteResponse(Responses.Protocol, true);
 
@@ -139,7 +143,7 @@ namespace BattlefieldSBKF.Models
             {
                 command = BattleShipProtocol.GetCommand(tcpString);
             }
-            catch 
+            catch
             {
                 response = BattleShipProtocol.GetResponse(tcpString);
             }
@@ -166,6 +170,11 @@ namespace BattlefieldSBKF.Models
         {
             Response response = new Response(resp, parameter);
             return ExecuteResponse(response, waitForCommand);
+        }
+
+        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
+        {
+            throw new NotImplementedException();
         }
     }
 
