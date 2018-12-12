@@ -6,10 +6,18 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class WrappedStreamReader
+    public class WrappedStreamReader: IDisposable
     {
-        StreamReader _streamReader;
+        StreamReader _streamReader;      
         bool _isServer;
+
+        public StreamReader StreamReader
+        {
+            get
+            {
+                return _streamReader;
+            }
+        }
 
         public WrappedStreamReader(StreamReader streamReader, bool isServer)
         {
@@ -32,6 +40,11 @@ namespace BattlefieldSBKF.Models
                 Debug.WriteLine(data);
             }
             return data;
+        }
+
+        public void Dispose()
+        {
+            _streamReader?.Dispose();
         }
     }
 }

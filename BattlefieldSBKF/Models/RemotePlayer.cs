@@ -10,11 +10,12 @@ namespace BattlefieldSBKF.Models
 {
     public class RemotePlayer : IPlayer
     {
-        //StreamReader _reader;
-        //StreamWriter _writer;
+
         WrappedStreamReader _reader;
         WrappedStreamWriter _writer;
         TcpClient _client;
+        NetworkStream _networkStream;
+        TcpListener _listener;
 
         public OceanGridBoard OceanGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -46,9 +47,9 @@ namespace BattlefieldSBKF.Models
             {
                 throw new ClientNotCreatedException($"Kan ej starta förbindelse. Port {port} troligtvis upptagen");
             }
-            var networkStream = _client.GetStream();
-            _reader = new WrappedStreamReader(new StreamReader(networkStream, Encoding.UTF8), IsServer);
-            _writer = new WrappedStreamWriter(new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
+            _networkStream = _client.GetStream();
+            _reader = new WrappedStreamReader(new StreamReader(_networkStream, Encoding.UTF8), IsServer);
+            _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
             Response response = GetResponse();
 
@@ -69,23 +70,22 @@ namespace BattlefieldSBKF.Models
 
         public void Connect(int port, string localPlayerName)
         {
-            TcpListener listener;
-
+            
             try
             {
-                listener = StartListen(port);
+                _listener = StartListen(port);
             }
             catch (SocketException ex)
             {
                 throw new ListenerNotInitiatedException($"Kan ej starta förbindelse. Port {port} troligtvis upptagen");
             }
 
-            _client = listener.AcceptTcpClient();
-            var networkStream = _client.GetStream();
+            _client = _listener.AcceptTcpClient();
+            _networkStream = _client.GetStream();
             //_reader = new StreamReader(networkStream, Encoding.UTF8);
             //_writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
-            _reader = new WrappedStreamReader(new StreamReader(networkStream, Encoding.UTF8), IsServer);
-            _writer = new WrappedStreamWriter(new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
+            _reader = new WrappedStreamReader(new StreamReader(_networkStream, Encoding.UTF8), IsServer);
+            _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
             Command command = ExecuteResponse(Responses.Protocol, true);
 
@@ -175,6 +175,18 @@ namespace BattlefieldSBKF.Models
         public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            _reader?.Dispose();
+            _writer?.Dispose();
+            _networkStream?.Dispose();
+            _client?.Close();
+            _listener?.Stop();
+           
+            
+          
         }
     }
 

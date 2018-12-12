@@ -6,10 +6,18 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class WrappedStreamWriter
+    public class WrappedStreamWriter : IDisposable
     {
         StreamWriter _streamWriter;
         bool _isServer;
+
+        public StreamWriter StreamWriter
+        {
+            get
+            {
+                return _streamWriter;
+            }
+        }
 
         public WrappedStreamWriter(StreamWriter streamWriter, bool isServer)
         {
@@ -31,7 +39,12 @@ namespace BattlefieldSBKF.Models
             //    Debug.WriteLine("Sent by client: ");
             //    Debug.WriteLine(data);
             //}
-           
+
+        }
+
+        public void Dispose()
+        {
+            _streamWriter?.Dispose();
         }
     }
 }
