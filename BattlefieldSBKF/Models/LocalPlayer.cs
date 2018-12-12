@@ -64,6 +64,7 @@ namespace BattlefieldSBKF.Models
                     if (commandInput.ToLower() == "quit")
                     {
                         response = new Response(Responses.ConnectionClosed, null);
+                        break;
                     }
                     else
                     {
@@ -86,6 +87,7 @@ namespace BattlefieldSBKF.Models
                     if (input.ToLower() == "quit")
                     {
                         command = new Command(Commands.Quit, null);
+                        break;
                     }
                     else
                     {
