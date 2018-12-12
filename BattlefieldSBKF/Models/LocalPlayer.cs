@@ -72,8 +72,8 @@ namespace BattlefieldSBKF.Models
         {
             if (command.Cmd == Commands.Fire)
             {
-                Console.WriteLine("(boom)");
-                return new Response(Responses.Miss, null);
+                Console.WriteLine("(Träff destroyer)");
+                return new Response(Responses.HitDestroyer, null);
             }
             else
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
@@ -100,9 +100,9 @@ namespace BattlefieldSBKF.Models
         {
             Command command = null;
 
-            if (response.Resp == Responses.Miss)
+            if (response.Resp == Responses.HitDestroyer)
             {
-                Console.WriteLine("Du missade!");
+                Console.WriteLine("Grattis: Du träffade destroyern!");
             }
             else
                 throw new NotImplementedException();

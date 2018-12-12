@@ -14,10 +14,24 @@ namespace BattlefieldSBKF.Models
         Dictionary<string, int> YcordinateDict;
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
-        string _clientStarts = "Client Starts";
-        string _hostsStarts = "Host Starts";
-        string _miss = "Miss!";
-        string _connectionClosed = "Connection closed";
+        const string _clientStarts = "Client Starts";
+        const string _hostsStarts = "Host Starts";
+        const string _miss = "Miss!";
+        const string _hitCarrier = "You hit my Carrier";
+        const string _hitBattleShip = "You hit my Battleship";
+        const string _hitDestroyer = "You hit my Destroyer";
+        const string _hitSubmarine = "You hit my Submarine";
+        const string _hitPatrolBoat = "You hit my Patrol Boat";
+        const string _sunkCarrier = "You sunk my Carrier";
+        const string _sunkBattleShip = "You sunk my Battleship";
+        const string _sunkDestroyer = "You sunk my Destroyer";
+        const string _sunkSubmarine = "You sunk my Submarine";
+        const string _sunkPatrolBoat = "You sunk my Patrol Boat";
+        const string _youWin = "You win!";
+        const string _connectionClosed = "Connection closed";
+        const string _syntaxError = "Syntax error";
+        const string _sequenceError = "Sequence error";
+
 
 
         public BattleShipProtocol()
@@ -116,25 +130,65 @@ namespace BattlefieldSBKF.Models
                             throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Parameter for protocol name is invalid.");
                         break;
                     case Responses.PlayerName:
-                        if (substrings.Length > 1 && substrings[1].Length > 0)
+                        if (substrings.Length > 1)
                         {
                             response = new Response(responseEnum, string.Join(' ', substrings.Skip(1).Take(substrings.Length - 1).ToArray()));
                         }
                         else
-                            throw new CantCreateResponseException($"Can't create response of input string {tcpResponse}. Parameter for Name is invalid.");
+                            response = new Response(responseEnum, "");
                         break;
                     case Responses.HostStarts:
-                        string info = null;
-                        if (substrings.Length > 1)
-                            info = string.Join(' ', substrings.Skip(1).Take(substrings.Length - 1).ToArray());
-                        response = new Response(responseEnum, info);
+                        response = new Response(responseEnum, _hostsStarts);
+                        break;
+                    case Responses.ClientStarts:
+                        response = new Response(responseEnum, _clientStarts);
                         break;
                     case Responses.Miss:
                         response = new Response(responseEnum, _miss);
                         break;
+                    case Responses.HitCarrier:
+                        response = new Response(responseEnum, _hitCarrier);
+                        break;
+                    case Responses.HitBattleship:
+                        response = new Response(responseEnum, _hitBattleShip);
+                        break;
+                    case Responses.HitDestroyer:
+                        response = new Response(responseEnum, _hitDestroyer);
+                        break;
+                    case Responses.HitSubmarine:
+                        response = new Response(responseEnum, _hitSubmarine);
+                        break;
+                    case Responses.HitPatrolBoat:
+                        response = new Response(responseEnum, _hitPatrolBoat);
+                        break;
+                    case Responses.SunkCarrier:
+                        response = new Response(responseEnum, _sunkCarrier);
+                        break;
+                    case Responses.SunkBattleship:
+                        response = new Response(responseEnum, _sunkBattleShip);
+                        break;
+                    case Responses.SunkDestroyer:
+                        response = new Response(responseEnum, _sunkDestroyer);
+                        break;
+                    case Responses.SunkSubmarine:
+                        response = new Response(responseEnum, _sunkSubmarine);
+                        break;
+                    case Responses.SunkPatrolBoat:
+                        response = new Response(responseEnum, _sunkPatrolBoat);
+                        break;
+                    case Responses.YouWin:
+                        response = new Response(responseEnum, _youWin);
+                        break;
                     case Responses.ConnectionClosed:
                         response = new Response(responseEnum, _connectionClosed);
                         break;
+                    case Responses.SyntaxError:
+                        response = new Response(responseEnum, _syntaxError);
+                        break;
+                    case Responses.SequenceError:
+                        response = new Response(responseEnum, _sequenceError);
+                        break;
+
                     default:
                         throw new NotImplementedException($"Can't create response. Response: {responseEnum} is not implemented.");
                 }
@@ -157,12 +211,7 @@ namespace BattlefieldSBKF.Models
             switch (response.Resp)
             {
                 case Responses.Protocol:
-                    if (response.Parameter == null || response.Parameter.ToLower() == ProtocolName.ToLower())
-                    {
-                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {ProtocolName}";
-                    }
-                    else
-                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} for protocol name is invalid.");
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {ProtocolName}";
                     break;
 
                 case Responses.PlayerName:
@@ -175,33 +224,71 @@ namespace BattlefieldSBKF.Models
                     break;
 
                 case Responses.HostStarts:
-                    if (response.Parameter == null || response.Parameter.ToLower() == _hostsStarts.ToLower())
-                    {
-                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hostsStarts}";
-                    }
-                    else
-                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hostsStarts}";
                     break;
 
                 case Responses.ClientStarts:
-                    if (response.Parameter == null || response.Parameter.ToLower() == _clientStarts.ToLower())
-                    {
-                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_clientStarts}";
-                    }
-                    else
-                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_clientStarts}";
                     break;
 
                 case Responses.Miss:
-                    if (response.Parameter == null || response.Parameter.ToLower() == _miss.ToLower())
-                    {
-                        tcpResponse = $"{TcpResponsesDict[response.Resp]} {_miss}";
-                    }
-                    else
-                        throw new CantCreateResponseException($"Can't create tcp response of {response.Resp}. Parameter: {response.Parameter} is invalid.");
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_miss}";
                     break;
+
+                case Responses.HitCarrier:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hitCarrier}";
+                    break;
+
+                case Responses.HitBattleship:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hitBattleShip}";
+                    break;
+
+                case Responses.HitDestroyer:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hitDestroyer}";
+                    break;
+
+                case Responses.HitSubmarine:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hitSubmarine}";
+                    break;
+
+                case Responses.HitPatrolBoat:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_hitPatrolBoat}";
+                    break;
+
+                case Responses.SunkCarrier:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sunkCarrier}";
+                    break;
+
+                case Responses.SunkBattleship:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sunkBattleShip}";
+                    break;
+
+                case Responses.SunkDestroyer:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sunkDestroyer}";
+                    break;
+
+                case Responses.SunkSubmarine:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sunkSubmarine}";
+                    break;
+
+                case Responses.SunkPatrolBoat:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sunkPatrolBoat}";
+                    break;
+
+                case Responses.YouWin:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_youWin}";
+                    break;
+
                 case Responses.ConnectionClosed:
                     tcpResponse = $"{TcpResponsesDict[response.Resp]} {_connectionClosed}";
+                    break;
+
+                case Responses.SyntaxError:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_syntaxError}";
+                    break;
+
+                case Responses.SequenceError:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sequenceError}";
                     break;
 
                 default:
