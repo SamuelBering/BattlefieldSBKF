@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public interface IPlayer
+    public interface IPlayer : IDisposable
     {
         Command GetCommand();
         void GetCommandOrResponse(out Command command, out Response response);

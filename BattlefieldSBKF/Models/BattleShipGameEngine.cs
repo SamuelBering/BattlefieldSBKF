@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class BattleShipGameEngine
+    public class BattleShipGameEngine : IDisposable
     {
         IPlayer _localPlayer;
         IPlayer _remotePlayer;
@@ -248,12 +248,17 @@ namespace BattlefieldSBKF.Models
         public void Run()
         {
             Console.Clear();
+
             GetUserInfo(out string host, out int port, out string playerName);
             _localPlayer.Name = playerName;
             Init(host, port);
+
             RunGame();
         }
 
-
+        public void Dispose()
+        {
+            _remotePlayer.Dispose();
+        }
     }
 }
