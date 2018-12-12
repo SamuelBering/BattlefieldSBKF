@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace BattlefieldSBKF.Models
@@ -45,27 +46,65 @@ namespace BattlefieldSBKF.Models
             response = null;
 
             Console.Write("Din tur: (tex A1 eller quit för att avsluta)");
-            var input = Console.ReadLine();
-
-            if (IsServer)
+            string input;
+            while (true)
             {
-                if (input.ToLower() == "quit")
+                input = Console.ReadLine();
+
+                var inputAsArray = input.Split(' ');
+
+                var commandInput = inputAsArray[0];
+
+                var commandComments = String.Join(string.Empty,inputAsArray, 1, inputAsArray.Length -1);
+                
+
+                if (IsServer)
                 {
-                    response = new Response(Responses.ConnectionClosed, null);
+
+                    if (commandInput.ToLower() == "quit")
+                    {
+                        response = new Response(Responses.ConnectionClosed, null);
+                    }
+                    else
+                    {
+
+                        if (commandInput.Length <= 3 && (int) commandInput.ToLower()[0] >= 97 &&
+                            (int) commandInput.ToLower()[0] <= 106)
+                        {
+                            if (Int32.TryParse(commandInput.Substring(1, commandInput.Length-1), out int result) &&
+                                result < 11 && result > 0)
+                            {
+                                command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
+                                    result.ToString(), commandComments);
+                                break;
+                            }
+                        }
+                    }
                 }
                 else
-                    command = new Command(Commands.Fire, input.Substring(0, 1).ToUpper(), input.Substring(1));
-            }
-            else
-            {
-                if (input.ToLower() == "quit")
                 {
-                    command = new Command(Commands.Quit, null);
+                    if (input.ToLower() == "quit")
+                    {
+                        command = new Command(Commands.Quit, null);
+                    }
+                    else
+                    {
+                        if (commandInput.Length <= 3 && (int)commandInput.ToLower()[0] >= 97 &&
+                            (int)commandInput.ToLower()[0] <= 106)
+                        {
+                            if (Int32.TryParse(commandInput.Substring(1, commandInput.Length-1), out int result) &&
+                                result < 11 && result > 0)
+                            {
+                                command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
+                                    result.ToString(), commandComments);
+                                break;
+                            }
+                        }
+                    }
                 }
-                else
-                    command = new Command(Commands.Fire, input.Substring(0, 1).ToUpper(), input.Substring(1));
-            }
 
+                Console.WriteLine("Ogiltigt kommando!");
+            }
         }
 
         public Response ExecuteCommand(Command command, bool waitForResponse)
@@ -117,5 +156,7 @@ namespace BattlefieldSBKF.Models
         {
             throw new NotImplementedException();
         }
+
+        
     }
 }
