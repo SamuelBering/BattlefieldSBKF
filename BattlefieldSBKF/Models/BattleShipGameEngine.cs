@@ -11,6 +11,7 @@ namespace BattlefieldSBKF.Models
         bool _IsServer = false;
         string _host;
         int _port;
+        
 
         public BattleShipGameEngine(IPlayer localPlayer, IPlayer remotePlayer)
         {
@@ -198,19 +199,20 @@ namespace BattlefieldSBKF.Models
 
             if (_IsServer)
             {
-                _remotePlayer.Connect(_port, _localPlayer.Name);
+                if (!_remotePlayer.Connect(_port, _localPlayer.Name))
+                    return;
                 Random rnd = new Random();
-                //localPlayerStart = rnd.Next(0, 1) == 1 ? true : false;
-                localPlayerStart = true;
+                localPlayerStart = rnd.Next(0, 2) == 1 ? true : false;
+                //localPlayerStart = true;
                 Responses resp = localPlayerStart ? Responses.HostStarts : Responses.ClientStarts;
                 _remotePlayer.ExecuteResponse(resp, false, null);
                 RunAsServer(localPlayerStart);
             }
             else
             {
-                _remotePlayer.Connect(_host, _port, _localPlayer.Name);
-                //hämta svar om vem som startar från serven
-                var response = _remotePlayer.GetResponse();
+                if (!_remotePlayer.Connect(_host, _port, _localPlayer.Name))
+                    return;               
+                var response = _remotePlayer.GetResponse(Responses.HostStarts,Responses.ClientStarts);
                 if (response.Resp == Responses.HostStarts)
                     localPlayerStart = false;
                 RunAsClient(localPlayerStart);

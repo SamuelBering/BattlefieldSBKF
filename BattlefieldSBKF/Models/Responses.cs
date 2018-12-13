@@ -24,6 +24,7 @@ namespace BattlefieldSBKF.Models
         YouWin,
         ConnectionClosed,
         SyntaxError,
-        SequenceError
+        SequenceError,
+        Help
     }
 }

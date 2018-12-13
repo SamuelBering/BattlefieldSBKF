@@ -22,18 +22,18 @@ namespace BattlefieldSBKF.Models
             Name = name;
         }
 
-        public void Connect(string host, int port, string localPlayerName)
+        public bool Connect(string host, int port, string localPlayerName)
         {
             throw new NotImplementedException();
         }
 
-        public void Connect(int port, string localPlayerName)
+        public bool Connect(int port, string localPlayerName)
         {
             throw new NotImplementedException();
         }
 
 
-        public Command GetCommand()
+        public Command GetCommand(params Commands[] validCommands)
         {
 
             throw new NotImplementedException();
@@ -125,7 +125,7 @@ namespace BattlefieldSBKF.Models
             throw new NotImplementedException();
         }
 
-        public Response GetResponse()
+        public Response GetResponse(params Responses[] validResponses)
         {
             throw new NotImplementedException();
         }
@@ -160,6 +160,16 @@ namespace BattlefieldSBKF.Models
         }
 
         public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Response ExecuteCommand(Command command, bool waitForResponse, params Responses[] validResponses)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Response ExecuteCommand(Commands cmd, bool waitForResponse, Responses[] validResponses, params string[] parameters)
         {
             throw new NotImplementedException();
         }
