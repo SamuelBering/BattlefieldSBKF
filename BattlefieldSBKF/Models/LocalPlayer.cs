@@ -56,55 +56,58 @@ namespace BattlefieldSBKF.Models
 
                 var commandInput = inputAsArray[0];
 
-                var commandComments = String.Join(string.Empty,inputAsArray, 1, inputAsArray.Length -1);
-                
+                var commandComments = String.Join(string.Empty, inputAsArray, 1, inputAsArray.Length - 1);
 
-                if (IsServer)
+                if (!String.IsNullOrEmpty(input))
                 {
-
-                    if (commandInput.ToLower() == "quit")
+                    if (IsServer)
                     {
-                        response = new Response(Responses.ConnectionClosed, null);
-                        break;
+
+                        if (commandInput.ToLower() == "quit")
+                        {
+                            response = new Response(Responses.ConnectionClosed, null);
+                            break;
+                        }
+                        else
+                        {
+
+                            if (commandInput.Length <= 3 && (int)commandInput.ToLower()[0] >= 97 &&
+                                (int)commandInput.ToLower()[0] <= 106)
+                            {
+                                if (Int32.TryParse(commandInput.Substring(1, commandInput.Length - 1), out int result) &&
+                                    result < 11 && result > 0)
+                                {
+                                    command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
+                                        result.ToString(), commandComments);
+                                    break;
+                                }
+                            }
+                        }
                     }
                     else
                     {
-
-                        if (commandInput.Length <= 3 && (int) commandInput.ToLower()[0] >= 97 &&
-                            (int) commandInput.ToLower()[0] <= 106)
+                        if (input.ToLower() == "quit")
                         {
-                            if (Int32.TryParse(commandInput.Substring(1, commandInput.Length-1), out int result) &&
-                                result < 11 && result > 0)
+                            command = new Command(Commands.Quit, null);
+                            break;
+                        }
+                        else
+                        {
+                            if (commandInput.Length <= 3 && (int)commandInput.ToLower()[0] >= 97 &&
+                                (int)commandInput.ToLower()[0] <= 106)
                             {
-                                command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
-                                    result.ToString(), commandComments);
-                                break;
+                                if (Int32.TryParse(commandInput.Substring(1, commandInput.Length - 1), out int result) &&
+                                    result < 11 && result > 0)
+                                {
+                                    command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
+                                        result.ToString(), commandComments);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-                else
-                {
-                    if (input.ToLower() == "quit")
-                    {
-                        command = new Command(Commands.Quit, null);
-                        break;
-                    }
-                    else
-                    {
-                        if (commandInput.Length <= 3 && (int)commandInput.ToLower()[0] >= 97 &&
-                            (int)commandInput.ToLower()[0] <= 106)
-                        {
-                            if (Int32.TryParse(commandInput.Substring(1, commandInput.Length-1), out int result) &&
-                                result < 11 && result > 0)
-                            {
-                                command = new Command(Commands.Fire, commandInput.Substring(0, 1).ToUpper(),
-                                    result.ToString(), commandComments);
-                                break;
-                            }
-                        }
-                    }
-                }
+
 
                 Console.WriteLine("Ogiltigt kommando!");
             }
@@ -114,11 +117,8 @@ namespace BattlefieldSBKF.Models
         {
             if (command.Cmd == Commands.Fire)
             {
-                
-                var index = OceanGridBoard.GridSide * (BattleShipProtocol.YcoordinateDict[command.Parameters[0]] - 1 ) + Int32.Parse(command.Parameters[1]) - 1; 
                 OceanGridBoard.ShowBoard();
                 return OceanGridBoard.Fire(command.Parameters[0], command.Parameters[1]);
-                //return new Response(Responses.Miss, null);
             }
             else
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
