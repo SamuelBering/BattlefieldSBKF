@@ -41,7 +41,8 @@ namespace BattlefieldSBKF.Models
                     response = _remotePlayer.ExecuteCommand(command, true);
                     if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
                     {
-                        _localPlayer.ExecuteResponse(response, false);
+                        //_localPlayer.ExecuteResponse(response, false);
+                        _localPlayer.ExecuteResponse(response, command, false);
                         return;
                     }
                     else
@@ -74,7 +75,8 @@ namespace BattlefieldSBKF.Models
 
                 if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
                 {
-                    _localPlayer.ExecuteResponse(response, false);
+                    //_localPlayer.ExecuteResponse(response, false);
+                    _localPlayer.ExecuteResponse(response, command, false);
                     return;
                 }
                 else

@@ -13,9 +13,8 @@ namespace BattlefieldSBKF.Models
     public class OceanGridBoard: GridBoard
     {
         private readonly IList<Ship> _ships;
-        private readonly IBattleShipProtocol _battleShipProtocol;
         
-        public OceanGridBoard(int gridSide) : base(gridSide)
+        public OceanGridBoard(int gridSide, IBattleShipProtocol batProto) : base(gridSide, batProto)
         {
             _ships = new List<Ship>()
             {
@@ -25,7 +24,7 @@ namespace BattlefieldSBKF.Models
                 new Submarine(),
                 new PatrolBoat()
             };
-            _battleShipProtocol = new BattleShipProtocol();
+            
             Initialize();
         }
 
@@ -123,8 +122,6 @@ namespace BattlefieldSBKF.Models
             return rnd.Next(base.Grid.Length);
         }
 
-        
-
         public Response Fire(string yCoord, string xCoord)
         {
             var gridIndex = BoardCoordinateToIndex(yCoord, xCoord);
@@ -145,7 +142,7 @@ namespace BattlefieldSBKF.Models
                 {
                     ship.IsDestroyed = true;
                     Enum.TryParse($"Sunk{ship.Name}", out Responses sunkresult);
-                    return new Response(sunkresult, null);  //$"Träff. Du sänkte min {ship.Name}";
+                    return IsAllShipsSunken() ? new Response(Responses.YouWin, null) : new Response(sunkresult, null);  
                 }
 
                 
@@ -158,18 +155,17 @@ namespace BattlefieldSBKF.Models
             return new Response(Responses.Miss, null);
         }
 
-        public bool IsAllShipsSunken()
+        private bool IsAllShipsSunken()
         {
             return _ships.All(x => x.IsDestroyed);
         }
 
-        private int BoardCoordinateToIndex(string yCoord, string xCoord)
+        
+
+        public override void ShowBoard()
         {
-            var index = GridSide * (_battleShipProtocol.YcordinateDict[yCoord] - 1) 
-                        + Int32.Parse(xCoord) - 1;
-            return index;
+            Console.WriteLine("Oceangrid");
+            base.ShowBoard();
         }
-
-
     }
 }

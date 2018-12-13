@@ -7,8 +7,8 @@ namespace BattlefieldSBKF.Models
 {
     public class LocalPlayer : IPlayer
     {
-        public OceanGridBoard OceanGridBoard { get; set; } = new OceanGridBoard(10);
-        public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public OceanGridBoard OceanGridBoard { get; set; } = new OceanGridBoard(10, new BattleShipProtocol());
+        public TargetGridBoard TargetGridBoard { get; set;} = new TargetGridBoard(10, new BattleShipProtocol());
         public IBattleShipProtocol BattleShipProtocol { get; set; } = new BattleShipProtocol();
         public string Name { get; set; }
         public bool IsServer { get; set; }
@@ -47,7 +47,8 @@ namespace BattlefieldSBKF.Models
             response = null;
 
             OceanGridBoard.ShowBoard();
-            Console.Write("Din tur: (tex A1 eller quit för att avsluta)");
+            TargetGridBoard.ShowBoard();
+            Console.Write("Din tur (tex A1 eller quit för att avsluta): ");
             string input;
             while (true)
             {
@@ -118,8 +119,9 @@ namespace BattlefieldSBKF.Models
         {
             if (command.Cmd == Commands.Fire)
             {
-                OceanGridBoard.ShowBoard();
-                return OceanGridBoard.Fire(command.Parameters[0], command.Parameters[1]);
+                var response = OceanGridBoard.Fire(command.Parameters[0], command.Parameters[1]);
+
+                return response;
             }
             else
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
@@ -145,13 +147,48 @@ namespace BattlefieldSBKF.Models
         public Command ExecuteResponse(Response response, bool waitForCommand)
         {
             Command command = null;
-
-            if (response.Resp == Responses.HitDestroyer)
+            
+            switch (response.Resp)
             {
-                Console.WriteLine("Grattis: Du träffade destroyern!");
+                case Responses.HitDestroyer:
+                    Console.WriteLine("Grattis: Du träffade destroyern!");
+                    break;
+                case Responses.HitBattleship:
+                    Console.WriteLine("Grattis: Du träffade battleshipet!");
+                    break;
+                case Responses.HitCarrier:
+                    Console.WriteLine("Grattis: Du träffade carriern!");
+                    break;
+                case Responses.HitSubmarine:
+                    Console.WriteLine("Grattis: Du träffade submarinen!");
+                    break;
+                case Responses.HitPatrolBoat:
+                    Console.WriteLine("Grattis: Du träffade patrolboaten!");
+                    break;
+                case Responses.SunkDestroyer:
+                    Console.WriteLine("Grattis: Du sänkte destroyern!");
+                    break;
+                case Responses.SunkBattleship:
+                    Console.WriteLine("Bravo: Du sänkte battleshipet!");
+                    break;
+                case Responses.SunkCarrier:
+                    Console.WriteLine("Bravo: Du sänkte carriern!");
+                    break;
+                case Responses.SunkSubmarine:
+                    Console.WriteLine("Bravo: Du sänkte submarinen!");
+                    break;
+                case Responses.SunkPatrolBoat:
+                    Console.WriteLine("Bravo: Du sänkte patrolboaten!");
+                    break;
+                case Responses.Miss:
+                    Console.WriteLine("Synd: Du missade...");
+                    break;
+                case Responses.YouWin:
+                    Console.WriteLine("Jättebra!!: Du vann");
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
-            else
-                throw new NotImplementedException();
 
             if (waitForCommand)
                 command = GetCommand();
@@ -161,7 +198,63 @@ namespace BattlefieldSBKF.Models
 
         public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
         {
-            throw new NotImplementedException();
+            Command command = null;
+
+            if ((int)response.Resp == 4)
+            {
+                TargetGridBoard.MarkShot(initialCommand.Parameters[0], initialCommand.Parameters[1], hit: false);
+            }
+            else if ((int)response.Resp >= 5 && (int)response.Resp <= 15)
+            {
+                TargetGridBoard.MarkShot(initialCommand.Parameters[0], initialCommand.Parameters[1], hit: true);
+            }
+
+            switch (response.Resp)
+            {
+                case Responses.HitDestroyer:
+                    Console.WriteLine("Grattis: Du träffade destroyern!");
+                    break;
+                case Responses.HitBattleship:
+                    Console.WriteLine("Grattis: Du träffade battleshipet!");
+                    break;
+                case Responses.HitCarrier:
+                    Console.WriteLine("Grattis: Du träffade carriern!");
+                    break;
+                case Responses.HitSubmarine:
+                    Console.WriteLine("Grattis: Du träffade submarinen!");
+                    break;
+                case Responses.HitPatrolBoat:
+                    Console.WriteLine("Grattis: Du träffade patrolboaten!");
+                    break;
+                case Responses.SunkDestroyer:
+                    Console.WriteLine("Grattis: Du sänkte destroyern!");
+                    break;
+                case Responses.SunkBattleship:
+                    Console.WriteLine("Bravo: Du sänkte battleshipet!");
+                    break;
+                case Responses.SunkCarrier:
+                    Console.WriteLine("Bravo: Du sänkte carriern!");
+                    break;
+                case Responses.SunkSubmarine:
+                    Console.WriteLine("Bravo: Du sänkte submarinen!");
+                    break;
+                case Responses.SunkPatrolBoat:
+                    Console.WriteLine("Bravo: Du sänkte patrolboaten!");
+                    break;
+                case Responses.Miss:
+                    Console.WriteLine("Synd: Du missade...");
+                    break;
+                case Responses.YouWin:
+                    Console.WriteLine("Jättebra!!: Du vann");
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            if (waitForCommand)
+                command = GetCommand();
+
+            return command;
         }
 
         public void Dispose()
