@@ -11,7 +11,7 @@ namespace BattlefieldSBKF.Models
         Dictionary<string, Responses> ResponsesDict;
         Dictionary<Commands, string> TcpCommandsDict;
         Dictionary<Responses, string> TcpResponsesDict;
-        Dictionary<string, int> YcordinateDict;
+        public Dictionary<string, int> YcordinateDict { get; set; }
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
         const string _clientStarts = "Client Starts";

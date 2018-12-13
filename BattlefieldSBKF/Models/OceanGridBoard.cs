@@ -165,7 +165,7 @@ namespace BattlefieldSBKF.Models
 
         private int BoardCoordinateToIndex(string yCoord, string xCoord)
         {
-            var index = GridSide * (_battleShipProtocol.YcoordinateDict[yCoord] - 1) 
+            var index = GridSide * (_battleShipProtocol.YcordinateDict[yCoord] - 1) 
                         + Int32.Parse(xCoord) - 1;
             return index;
         }
