@@ -46,6 +46,7 @@ namespace BattlefieldSBKF.Models
             command = null;
             response = null;
 
+            OceanGridBoard.ShowBoard();
             Console.Write("Din tur: (tex A1 eller quit för att avsluta)");
             string input;
             while (true)
