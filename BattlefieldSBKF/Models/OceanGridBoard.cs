@@ -13,6 +13,7 @@ namespace BattlefieldSBKF.Models
     public class OceanGridBoard: GridBoard
     {
         private readonly IList<Ship> _ships;
+        private readonly IBattleShipProtocol _battleShipProtocol;
         
         public OceanGridBoard(int gridSide) : base(gridSide)
         {
@@ -24,6 +25,7 @@ namespace BattlefieldSBKF.Models
                 new Submarine(),
                 new PatrolBoat()
             };
+            _battleShipProtocol = new BattleShipProtocol();
             Initialize();
         }
 
@@ -123,9 +125,10 @@ namespace BattlefieldSBKF.Models
 
         
 
-        public string Fire(int gridIndex)
+        public Response Fire(string yCoord, string xCoord)
         {
-            
+            var gridIndex = BoardCoordinateToIndex(yCoord, xCoord);
+
             if (gridIndex < 0 || gridIndex > Grid.Length - 1)
             {
                 throw new ArgumentException("Index out of range!");
@@ -141,13 +144,18 @@ namespace BattlefieldSBKF.Models
                 if (ship.Length == 0)
                 {
                     ship.IsDestroyed = true;
-                    return $"Träff. Du sänkte min {ship.Name}";
+                    Enum.TryParse($"Sunk{ship.Name}", out Responses sunkresult);
+                    return new Response(sunkresult, null);  //$"Träff. Du sänkte min {ship.Name}";
                 }
 
-                return $"Träff. {ship.Name}";
+                
+                Enum.TryParse($"Hit{ship.Name}", out Responses hitresult);
+
+
+                return new Response(hitresult, null);
             }
            
-            return "Miss";
+            return new Response(Responses.Miss, null);
         }
 
         public bool IsAllShipsSunken()
@@ -155,7 +163,12 @@ namespace BattlefieldSBKF.Models
             return _ships.All(x => x.IsDestroyed);
         }
 
-        
+        private int BoardCoordinateToIndex(string yCoord, string xCoord)
+        {
+            var index = GridSide * (_battleShipProtocol.YcoordinateDict[yCoord] - 1) 
+                        + Int32.Parse(xCoord) - 1;
+            return index;
+        }
 
 
     }

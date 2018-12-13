@@ -14,5 +14,7 @@ namespace BattlefieldSBKF.Models
         Response GetResponse(string tcpResponse);
         string GetTcpResponse(Response response);
 
+        Dictionary<string, int> YcoordinateDict { get; }
+
     }
 }

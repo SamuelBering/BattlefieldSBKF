@@ -7,9 +7,9 @@ namespace BattlefieldSBKF.Models
 {
     public class LocalPlayer : IPlayer
     {
-        public OceanGridBoard OceanGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public OceanGridBoard OceanGridBoard { get; set; } = new OceanGridBoard(10);
         public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public IBattleShipProtocol BattleShipProtocol { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IBattleShipProtocol BattleShipProtocol { get; set; } = new BattleShipProtocol();
         public string Name { get; set; }
         public bool IsServer { get; set; }
 
@@ -17,9 +17,10 @@ namespace BattlefieldSBKF.Models
         {
         }
 
-        public LocalPlayer(string name)
+        public LocalPlayer(string name, IBattleShipProtocol batprot)
         {
             Name = name;
+            BattleShipProtocol = batprot;
         }
 
         public void Connect(string host, int port, string localPlayerName)
@@ -113,8 +114,11 @@ namespace BattlefieldSBKF.Models
         {
             if (command.Cmd == Commands.Fire)
             {
-                Console.WriteLine("(boom)");
-                return new Response(Responses.Miss, null);
+                
+                var index = OceanGridBoard.GridSide * (BattleShipProtocol.YcoordinateDict[command.Parameters[0]] - 1 ) + Int32.Parse(command.Parameters[1]) - 1; 
+                OceanGridBoard.ShowBoard();
+                return OceanGridBoard.Fire(command.Parameters[0], command.Parameters[1]);
+                //return new Response(Responses.Miss, null);
             }
             else
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");

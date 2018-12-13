@@ -14,6 +14,8 @@ namespace BattlefieldSBKF.Models
         Dictionary<string, int> YcordinateDict;
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
+        public Dictionary<string, int> YcoordinateDict { get => YcordinateDict; set => YcordinateDict = value; }
+
         string _clientStarts = "Client Starts";
         string _hostsStarts = "Host Starts";
         string _miss = "Miss!";
