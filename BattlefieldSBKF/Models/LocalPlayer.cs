@@ -146,9 +146,9 @@ namespace BattlefieldSBKF.Models
         {
             Command command = null;
 
-            if (response.Resp == Responses.Miss)
+            if (response.Resp == Responses.HitDestroyer)
             {
-                Console.WriteLine("Du missade!");
+                Console.WriteLine("Grattis: Du träffade destroyern!");
             }
             else
                 throw new NotImplementedException();
