@@ -98,7 +98,7 @@ namespace BattlefieldSBKF.Models
                 return false;
 
             this.Name = string.Join(' ', command.Parameters);
-
+            Console.Clear();
             Console.WriteLine($"Du spelar mot: {this.Name}\tIpaddress: {_client.Client.RemoteEndPoint}");
 
             command = ExecuteResponse(Responses.PlayerName, waitForCommand: true, parameter: localPlayerName, validCommands: Commands.Start);

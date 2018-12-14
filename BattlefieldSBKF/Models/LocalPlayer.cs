@@ -104,11 +104,17 @@ namespace BattlefieldSBKF.Models
             }
         }
 
-        public Response ExecuteCommand(Command command, bool waitForResponse)
+        public Response ExecuteCommand(Command command, bool waitForResponse, ref bool endGame)
         {
             if (command.Cmd == Commands.Fire)
             {
                 var response = OceanGridBoard.Fire(command.Parameters[0], command.Parameters[1]);
+
+                if (response.Resp == Responses.YouWin)
+                {
+                    Console.WriteLine($"{Name}....du är en sån jäddra..LOOSEER!!!");
+                    endGame = true;
+                }
 
                 return response;
             }
@@ -175,7 +181,7 @@ namespace BattlefieldSBKF.Models
             return command;
         }
 
-        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
+        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand, ref bool endGame)
         {
             Command command = null;
 
@@ -228,7 +234,8 @@ namespace BattlefieldSBKF.Models
                     Console.WriteLine("Synd: Du missade...");
                     break;
                 case Responses.YouWin:
-                    Console.WriteLine("Jättebra!!: Du vann");
+                    endGame = true;
+                    Console.WriteLine($"Jättebra!!: Du vann {Name} ***");
                     break;
                 default:
                     throw new NotImplementedException();

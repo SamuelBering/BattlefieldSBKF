@@ -46,9 +46,9 @@ namespace BattlefieldSBKF.Models
                         endGame = true;
                         return;
                     }
-                    _localPlayer.ExecuteResponse(response, command, false);
+                    _localPlayer.ExecuteResponse(response, command, false, ref endGame);
                     return;
-                 }
+                }
                 else
                     throw new UnExpectedCommandException($"Expected command: {Commands.Fire} but instead got: {command.Cmd}");
             }
@@ -81,7 +81,7 @@ namespace BattlefieldSBKF.Models
                     return;
                 }
 
-                _localPlayer.ExecuteResponse(response, command, false);
+                _localPlayer.ExecuteResponse(response, command, false, ref endGame);
                 return;
 
             }
@@ -99,24 +99,22 @@ namespace BattlefieldSBKF.Models
 
         void ExecuteRemotePlayerTurnAsServer(ref bool endGame)
         {
-
+            Console.WriteLine("(Motspelarens tur -- vänta)");
             Command command = _remotePlayer.GetCommand(Commands.Fire);
-
             if (command.Cmd == Commands.Quit)
             {
                 endGame = true;
                 return;
             }
 
-            Response response = _localPlayer.ExecuteCommand(command, true);
+            Response response = _localPlayer.ExecuteCommand(command, true, ref endGame);
             _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
 
             return;
-
-
         }
         void ExecuteRemotePlayerTurnAsClient(ref bool endGame)
         {
+            Console.WriteLine("(Motspelarens tur -- vänta)");
             Command command = _remotePlayer.GetCommand(Commands.Fire);
             if (command.Cmd == Commands.Quit)
             {
@@ -124,7 +122,7 @@ namespace BattlefieldSBKF.Models
                 return;
             }
 
-            Response response = _localPlayer.ExecuteCommand(command, true);
+            Response response = _localPlayer.ExecuteCommand(command, true, ref endGame);
             _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
             return;
 
@@ -133,6 +131,12 @@ namespace BattlefieldSBKF.Models
         void RunAsServer(bool localPlayerStart)
         {
             bool endGame = false;
+
+            if (!localPlayerStart)
+            {
+                _localPlayer.OceanGridBoard.ShowBoard();
+                _localPlayer.TargetGridBoard.ShowBoard();
+            }
 
             while (!endGame)
             {
@@ -156,6 +160,12 @@ namespace BattlefieldSBKF.Models
         {
             bool endGame = false;
 
+            if (!localPlayerStart)
+            {
+                _localPlayer.OceanGridBoard.ShowBoard();
+                _localPlayer.TargetGridBoard.ShowBoard();
+            }
+
             while (!endGame)
             {
                 if (localPlayerStart)
@@ -176,12 +186,14 @@ namespace BattlefieldSBKF.Models
 
         void RunGame()
         {
+            Console.Clear();
             bool localPlayerStart = true;
 
             if (_IsServer)
             {
+                Console.WriteLine("Väntar på anslutning...");
                 if (!_remotePlayer.Connect(_port, _localPlayer.Name))
-                    return;
+                    return;                
                 Random rnd = new Random();
                 localPlayerStart = rnd.Next(0, 2) == 1 ? true : false;
                 //localPlayerStart = true;
@@ -231,7 +243,7 @@ namespace BattlefieldSBKF.Models
         public void Run()
         {
             Console.Clear();
-
+            Console.WriteLine("* Välkommen till BATTLESHIP-THE GAME-version 0.0 beta *");
             GetUserInfo(out string host, out int port, out string playerName);
             _localPlayer.Name = playerName;
             Init(host, port);
