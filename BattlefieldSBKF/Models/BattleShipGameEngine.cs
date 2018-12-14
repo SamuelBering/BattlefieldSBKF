@@ -6,13 +6,14 @@ namespace BattlefieldSBKF.Models
 {
     public class BattleShipGameEngine : IDisposable
     {
-        IPlayer _localPlayer;
-        IPlayer _remotePlayer;
+        ILocalPlayer _localPlayer;
+        IRemotePlayer _remotePlayer;
         bool _IsServer = false;
         string _host;
         int _port;
 
-        public BattleShipGameEngine(IPlayer localPlayer, IPlayer remotePlayer)
+
+        public BattleShipGameEngine(ILocalPlayer localPlayer, IRemotePlayer remotePlayer)
         {
             _localPlayer = localPlayer;
             _remotePlayer = remotePlayer;
@@ -38,15 +39,25 @@ namespace BattlefieldSBKF.Models
             {
                 if (command.Cmd == Commands.Fire)
                 {
-                    response = _remotePlayer.ExecuteCommand(command, true);
-                    if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
+                    response = _remotePlayer.ExecuteCommand(command, waitForResponse: true,
+                                validResponses: _remotePlayer.BattleShipProtocol.MissHitSunkWinResponses);
+                    if (response.Resp == Responses.ConnectionClosed)
                     {
-                        //_localPlayer.ExecuteResponse(response, false);
-                        _localPlayer.ExecuteResponse(response, command, false);
+                        //_remotePlayer.ExecuteResponse(response, false);
+                        endGame = true;
                         return;
                     }
-                    else
-                        throw new UnExpectedResponseException($"Expected miss-, hit-, sunk- or win-response but instead got: {response.Resp}.");
+
+                    _localPlayer.ExecuteResponse(response, false);
+                    return;
+                    //response = _remotePlayer.ExecuteCommand(command, true);
+                    //if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
+                    //{
+                    //    _localPlayer.ExecuteResponse(response, false);
+                    //    return;
+                    //}
+                    //else
+                    //    throw new UnExpectedResponseException($"Expected miss-, hit-, sunk- or win-response but instead got: {response.Resp}.");
                 }
                 else
                     throw new UnExpectedCommandException($"Expected command: {Commands.Fire} but instead got: {command.Cmd}");
@@ -55,7 +66,8 @@ namespace BattlefieldSBKF.Models
             {
                 if (response.Resp == Responses.ConnectionClosed)
                 {
-                    _remotePlayer.ExecuteResponse(response, false);
+                    _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
+                    //_remotePlayer.ExecuteResponse(response, false);
                     endGame = true;
                     return;
                 }
@@ -71,30 +83,43 @@ namespace BattlefieldSBKF.Models
 
             if (command.Cmd == Commands.Fire)
             {
-                response = _remotePlayer.ExecuteCommand(command, true);
-
-                if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
-                {
-                    //_localPlayer.ExecuteResponse(response, false);
-                    _localPlayer.ExecuteResponse(response, command, false);
-                    return;
-                }
-                else
-                    throw new UnExpectedResponseException($"Expected miss-, hit-, sunk- or win-response but instead got: {response.Resp}.");
-
-
-            }
-            else if (command.Cmd == Commands.Quit)
-            {
-                response = _remotePlayer.ExecuteCommand(command, true);
+                response = _remotePlayer.ExecuteCommand(command, waitForResponse: true,
+                                validResponses: _remotePlayer.BattleShipProtocol.MissHitSunkWinResponses);
 
                 if (response.Resp == Responses.ConnectionClosed)
                 {
                     endGame = true;
                     return;
                 }
-                else
-                    throw new UnExpectedResponseException($"Expected response: {Responses.ConnectionClosed} but instead got: {response.Resp}.");
+                //response = _remotePlayer.ExecuteCommand(command, true);
+                _localPlayer.ExecuteResponse(response, false);
+                return;
+
+                //if ((int)response.Resp >= 4 && (int)response.Resp <= 15)
+                //{
+                //    _localPlayer.ExecuteResponse(response, false);
+                //    return;
+                //}
+                //else
+                //    throw new UnExpectedResponseException($"Expected miss-, hit-, sunk- or win-response but instead got: {response.Resp}.");
+
+
+            }
+            else if (command.Cmd == Commands.Quit)
+            {
+                response = _remotePlayer.ExecuteCommand(command, waitForResponse: true,
+                               validResponses: Responses.ConnectionClosed);
+                endGame = true;
+                return;
+                //response = _remotePlayer.ExecuteCommand(command, true);
+
+                //if (response.Resp == Responses.ConnectionClosed)
+                //{
+                //    endGame = true;
+                //    return;
+                //}
+                //else
+                //    throw new UnExpectedResponseException($"Expected response: {Responses.ConnectionClosed} but instead got: {response.Resp}.");
 
             }
             else
@@ -104,49 +129,76 @@ namespace BattlefieldSBKF.Models
 
         void ExecuteRemotePlayerTurnAsServer(ref bool endGame)
         {
-            _remotePlayer.GetCommandOrResponse(out Command command, out Response response);
 
-            if (command.Cmd == Commands.Fire)
+            Command command = _remotePlayer.GetCommand(Commands.Fire);
+
+            if (command.Cmd == Commands.Quit)
             {
-                response = _localPlayer.ExecuteCommand(command, true);
-                _remotePlayer.ExecuteResponse(response, false);
-                return;
-            }
-            else if (command.Cmd == Commands.Quit)
-            {
-                _remotePlayer.ExecuteResponse(Responses.ConnectionClosed, false, null);
+                //_remotePlayer.ExecuteResponse(Responses.ConnectionClosed, waitForCommand: false, parameter: null, validCommands: null);
                 endGame = true;
                 return;
             }
+            //_remotePlayer.GetCommandOrResponse(out Command command, out Response response);
+
+            Response response = _localPlayer.ExecuteCommand(command, true);
+            _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
+
+            //_remotePlayer.ExecuteResponse(response, false);
+            return;
+
+            //if (command.Cmd == Commands.Fire)
+            //{
+            //    response = _localPlayer.ExecuteCommand(command, true);
+            //    _remotePlayer.ExecuteResponse(response, false);
+            //    return;
+            //}
+            //else if (command.Cmd == Commands.Quit)
+            //{
+            //    _remotePlayer.ExecuteResponse(Responses.ConnectionClosed, false, null);
+            //    endGame = true;
+            //    return;
+            //}
 
         }
         void ExecuteRemotePlayerTurnAsClient(ref bool endGame)
         {
-            _remotePlayer.GetCommandOrResponse(out Command command, out Response response);
-
-            if (command != null)
+            //_remotePlayer.GetCommandOrResponse(out Command command, out Response response);
+            Command command = _remotePlayer.GetCommand(Commands.Fire);
+            if (command.Cmd == Commands.Quit)
             {
-                if (command.Cmd == Commands.Fire)
-                {
-                    response = _localPlayer.ExecuteCommand(command, true);
-                    _remotePlayer.ExecuteResponse(response, false);
-                    return;
-                }
-                else
-                    throw new UnExpectedCommandException($"Expected command: {Commands.Fire} but instead got: {command.Cmd}");
-
+                endGame = true;
+                return;
             }
-            else
-            {
-                if (response.Resp == Responses.ConnectionClosed)
-                {
-                    endGame = true;
-                    return;
-                }
-                else
-                    throw new UnExpectedResponseException($"Expected response: {Responses.ConnectionClosed} but instead got: {response.Resp}.");
 
-            }
+            Response response = _localPlayer.ExecuteCommand(command, true);
+            _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
+            return;
+
+
+
+            //if (command != null)
+            //{
+            //    if (command.Cmd == Commands.Fire)
+            //    {
+            //        response = _localPlayer.ExecuteCommand(command, true);
+            //        _remotePlayer.ExecuteResponse(response, false);
+            //        return;
+            //    }
+            //    else
+            //        throw new UnExpectedCommandException($"Expected command: {Commands.Fire} but instead got: {command.Cmd}");
+
+            //}
+            //else
+            //{
+            //    if (response.Resp == Responses.ConnectionClosed)
+            //    {
+            //        endGame = true;
+            //        return;
+            //    }
+            //    else
+            //        throw new UnExpectedResponseException($"Expected response: {Responses.ConnectionClosed} but instead got: {response.Resp}.");
+
+            //}
 
         }
 
@@ -200,9 +252,10 @@ namespace BattlefieldSBKF.Models
 
             if (_IsServer)
             {
-                _remotePlayer.Connect(_port, _localPlayer.Name);
+                if (!_remotePlayer.Connect(_port, _localPlayer.Name))
+                    return;
                 Random rnd = new Random();
-                //localPlayerStart = rnd.Next(0, 1) == 1 ? true : false;
+                //localPlayerStart = rnd.Next(0, 2) == 1 ? true : false;
                 localPlayerStart = true;
                 Responses resp = localPlayerStart ? Responses.HostStarts : Responses.ClientStarts;
                 _remotePlayer.ExecuteResponse(resp, false, null);
@@ -210,9 +263,9 @@ namespace BattlefieldSBKF.Models
             }
             else
             {
-                _remotePlayer.Connect(_host, _port, _localPlayer.Name);
-                //hämta svar om vem som startar från serven
-                var response = _remotePlayer.GetResponse();
+                if (!_remotePlayer.Connect(_host, _port, _localPlayer.Name))
+                    return;
+                var response = _remotePlayer.GetResponse(Responses.HostStarts, Responses.ClientStarts);
                 if (response.Resp == Responses.HostStarts)
                     localPlayerStart = false;
                 RunAsClient(localPlayerStart);

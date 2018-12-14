@@ -8,7 +8,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class RemotePlayer : IPlayer
+    public class RemotePlayer : IRemotePlayer
     {
 
         WrappedStreamReader _reader;
@@ -37,7 +37,7 @@ namespace BattlefieldSBKF.Models
             return listener;
         }
 
-        public void Connect(string host, int port, string localPlayerName)
+        public bool Connect(string host, int port, string localPlayerName)
         {
             try
             {
@@ -51,26 +51,29 @@ namespace BattlefieldSBKF.Models
             _reader = new WrappedStreamReader(new StreamReader(_networkStream, Encoding.UTF8), IsServer);
             _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
-            Response response = GetResponse();
+            Response response = GetResponse(Responses.Protocol);
+            if (response.Resp == Responses.ConnectionClosed)
+                return false;
+            //if (response.Resp != Responses.Protocol)
+            //    throw new UnExpectedResponseException($"Unexpected response {response.Resp}. Expected response: {Responses.Protocol}");
 
-            if (response.Resp != Responses.Protocol)
-                throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
+            response = ExecuteCommand(Commands.Hello, waitForResponse: true,
+                validResponses: new Responses[] { Responses.PlayerName }, parameters: localPlayerName);
+            if (response.Resp == Responses.ConnectionClosed)
+                return false;
+            //if (response.Resp != Responses.PlayerName)
+            //    throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
 
-            Console.WriteLine(response.Resp + " " + response.Parameter);
-
-            response = ExecuteCommand(Commands.Hello, true, localPlayerName);
-
-            if (response.Resp != Responses.PlayerName)
-                throw new UnExpectedResponseException($"Unexpected response {response.Resp}");
-
-            Console.WriteLine(response.Resp + " " + response.Parameter);
-
-            response = ExecuteCommand(Commands.Start, false, null);
+            this.Name = response.Parameter;
+            Console.WriteLine($"Du spelar mot: {this.Name}\tIpaddress: {_client.Client.RemoteEndPoint}");
+            response = ExecuteCommand(Commands.Start, waitForResponse: false, validResponses: null, parameters: null);
+            return true;
         }
 
-        public void Connect(int port, string localPlayerName)
+
+        public bool Connect(int port, string localPlayerName)
         {
-            
+
             try
             {
                 _listener = StartListen(port);
@@ -82,55 +85,128 @@ namespace BattlefieldSBKF.Models
 
             _client = _listener.AcceptTcpClient();
             _networkStream = _client.GetStream();
-            //_reader = new StreamReader(networkStream, Encoding.UTF8);
-            //_writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
             _reader = new WrappedStreamReader(new StreamReader(_networkStream, Encoding.UTF8), IsServer);
             _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
-            Command command = ExecuteResponse(Responses.Protocol, true);
 
-            if (command.Cmd != Commands.Hello)
-                throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
+            Command command = ExecuteResponse(Responses.Protocol, waitForCommand: true, parameter: null, validCommands: Commands.Hello);
+            if (command.Cmd == Commands.Quit)
+                return false;
 
             this.Name = string.Join(' ', command.Parameters);
 
-            Console.WriteLine(command.Cmd + " " + string.Join(' ', command.Parameters));
+            Console.WriteLine($"Du spelar mot: {this.Name}\tIpaddress: {_client.Client.RemoteEndPoint}");
 
+            command = ExecuteResponse(Responses.PlayerName, waitForCommand: true, parameter: localPlayerName, validCommands: Commands.Start);
+            if (command.Cmd == Commands.Quit)
+                return false;
+            //command = ExecuteResponse(Responses.PlayerName, true, localPlayerName);
 
-            command = ExecuteResponse(Responses.PlayerName, true, localPlayerName);
-
-            if (command.Cmd != Commands.Start)
-                throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
-
-            Console.WriteLine(command.Cmd);
-
-
+            //if (command.Cmd != Commands.Start)
+            //    throw new UnExpectedCommandException($"Unexpected command: {command.Cmd}.");
+            return true;
         }
 
-        public Response ExecuteCommand(Command command, bool waitForResponse)
+        public Response ExecuteCommand(Command command, bool waitForResponse, params Responses[] validResponses)
         {
+            Response response = null;
+
             var tcpCommand = BattleShipProtocol.GetTcpCommand(command);
             _writer.WriteLine(tcpCommand);
 
             if (waitForResponse)
-            {
-                //Response response = BattleShipProtocol.GetResponse(_reader.ReadLine());
-                Response response = GetResponse();
-                return response;
-            }
-            else
-                return null;
+                response = GetResponse(validResponses);
+
+            return response;
+
+            //if (waitForResponse)
+            //{
+
+            //    Response response = GetResponse();
+            //    return response;
+            //}
+            //else
+            //    return null;
         }
 
-        public Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters)
+        public Response ExecuteCommand(Commands cmd, bool waitForResponse, Responses[] validResponses, params string[] parameters)
         {
             Command command = new Command(cmd, parameters);
-            return ExecuteCommand(command, waitForResponse);
+            return ExecuteCommand(command, waitForResponse, validResponses);
         }
 
-        public Command GetCommand()
+
+        public Command GetCommand(params Commands[] validCommands)
         {
-            throw new NotImplementedException();
+            Command command = null;
+            Response response = null;
+
+            int errorCount = 0;
+            while (true)
+            {
+                if (errorCount > 3)
+                    throw new ExceededErrorCodesLimitSent($"Number of error codes sent exceeded maxium(3).");
+
+                try
+                {
+
+                    GetCommandOrResponse(out command, out response);
+
+                    if (command != null)
+                    {
+                        if (command.Cmd == Commands.Quit && !IsServer)
+                        {
+                            ExecuteResponse(Responses.ConnectionClosed, false, null);
+                            return command;
+                        }
+                        else if (command.Cmd == Commands.Help)
+                        {
+                            ExecuteResponse(Responses.Help, false);
+                            continue;
+                        }
+
+                        bool isValidCommand = false;
+
+                        foreach (Commands validCommand in validCommands)
+                        {
+                            if (command.Cmd == validCommand)
+                                isValidCommand = true;
+                        }
+
+                        if (isValidCommand)
+                            return command;
+                        else
+                        {
+                            ExecuteResponse(Responses.SequenceError, false);
+                            errorCount++;
+                        }
+                    }
+                    else
+                    {
+                        if (response.Resp == Responses.ConnectionClosed && IsServer)
+                        {
+                            command = new Command(Commands.Quit, null);
+                            return command;
+                        }
+                        else
+                        {
+                            ExecuteResponse(Responses.SequenceError, false);
+                            errorCount++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex is CantCreateCommandException || ex is CantCreateResponseException)
+                    {
+                        ExecuteResponse(Responses.SyntaxError, false);
+                        errorCount++;
+                    }
+                    else
+                        throw;
+                }
+
+            }
         }
 
         public void GetCommandOrResponse(out Command command, out Response response)
@@ -150,9 +226,77 @@ namespace BattlefieldSBKF.Models
         }
 
 
-        public Response GetResponse()
+        public Response GetResponse(params Responses[] validResponses)
         {
-            return BattleShipProtocol.GetResponse(_reader.ReadLine());
+            Command command = null;
+            Response response = null;
+
+            int errorCount = 0;
+            while (true)
+            {
+                if (errorCount > 3)
+                    throw new ExceededErrorCodesLimitSent($"Number of error codes sent exceeded maxium(3).");
+
+                try
+                {
+
+                    GetCommandOrResponse(out command, out response);
+
+                    if (response != null)
+                    {
+                        if (response.Resp == Responses.ConnectionClosed && IsServer)
+                        {
+                            return response;
+                        }
+
+                        bool isValidResponse = false;
+
+                        foreach (Responses validResponse in validResponses)
+                        {
+                            if (response.Resp == validResponse)
+                                isValidResponse = true;
+                        }
+
+                        if (isValidResponse)
+                            return response;
+                        else
+                        {
+                            ExecuteResponse(Responses.SequenceError, false);
+                            errorCount++;
+                        }
+                    }
+                    else
+                    {
+                        if (command.Cmd == Commands.Quit && !IsServer)
+                        {
+                            response = new Response(Responses.ConnectionClosed, null);
+                            ExecuteResponse(response, false);
+                            return response;
+                        }
+                        else if (command.Cmd == Commands.Help)
+                        {
+                            ExecuteResponse(Responses.Help, false);
+                            continue;
+                        }
+                        else
+                        {
+                            ExecuteResponse(Responses.SequenceError, false);
+                            errorCount++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex is CantCreateCommandException || ex is CantCreateResponseException)
+                    {
+                        ExecuteResponse(Responses.SyntaxError, false);
+                        errorCount++;
+                    }
+                    else
+                        throw;
+                }
+
+            }
         }
 
         public Command ExecuteResponse(Response response, bool waitForCommand)
@@ -166,15 +310,61 @@ namespace BattlefieldSBKF.Models
             return command;
         }
 
+        public Command ExecuteResponse(Response response, bool waitForCommand, params Commands[] validCommands)
+        {
+            Command command = null;
+            _writer.WriteLine(BattleShipProtocol.GetTcpResponse(response));
+
+            if (waitForCommand)
+                command = GetCommand(validCommands);
+
+            //if (waitForCommand)
+            //{
+            //    int errorCount = 0;
+            //    while (true)
+            //    {
+            //        if (errorCount > 3)
+            //            throw new ExceededErrorCodesLimitSent($"Number of error codes sent exceeded maxium(3).");
+
+            //        try
+            //        {
+            //            bool isValidCommand = false;
+
+            //            command = BattleShipProtocol.GetCommand(_reader.ReadLine());
+            //            foreach (Commands validCommand in validCommands)
+            //            {
+            //                if (command.Cmd == validCommand)
+            //                    isValidCommand = true;
+            //            }
+
+            //            if (isValidCommand)
+            //                return command;
+            //            else
+            //            {
+            //                ExecuteResponse(Responses.SequenceError, false);
+            //                errorCount++;
+            //            }
+            //        }
+            //        catch (CantCreateCommandException ex)
+            //        {
+            //            ExecuteResponse(Responses.SyntaxError, false);
+            //            errorCount++;
+            //        }
+            //    }
+            //}
+            return command;
+        }
+
         public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter = null)
         {
             Response response = new Response(resp, parameter);
             return ExecuteResponse(response, waitForCommand);
         }
 
-        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
+        public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter, params Commands[] validCommands)
         {
-            throw new NotImplementedException();
+            Response response = new Response(resp, parameter);
+            return ExecuteResponse(response, waitForCommand, validCommands);
         }
 
         public void Dispose()
@@ -184,9 +374,9 @@ namespace BattlefieldSBKF.Models
             _networkStream?.Dispose();
             _client?.Close();
             _listener?.Stop();
-           
-            
-          
+
+
+
         }
     }
 

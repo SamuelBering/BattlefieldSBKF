@@ -7,6 +7,7 @@ namespace BattlefieldSBKF.Models
     public interface IBattleShipProtocol
     {
         string ProtocolName { get; }
+        Responses[] MissHitSunkWinResponses { get; set; }
 
         Command GetCommand(string tcpCommand);
         string GetTcpCommand(Command command);

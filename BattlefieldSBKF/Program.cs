@@ -38,16 +38,16 @@ namespace BattlefieldSBKF
 
                 using (BattleShipGameEngine battleShipGameEngine = new BattleShipGameEngine(localPlayer, remotePlayer))
                 {
-                    try
-                    {
+                    //try
+                    //{
                         battleShipGameEngine.Run();
-                    }
-                    catch (Exception ex)
-                    {
+                    //}
+                    //catch (Exception ex)
+                    //{
 
-                        Debug.WriteLine($"Exception: {ex.ToString()}");
-                        Console.WriteLine($"Ett fel inträffade: {ex.Message}");
-                    }
+                    //    Debug.WriteLine($"Exception: {ex.ToString()}");
+                    //    Console.WriteLine($"Ett fel inträffade: {ex.Message}");
+                    //}
 
                 }
 

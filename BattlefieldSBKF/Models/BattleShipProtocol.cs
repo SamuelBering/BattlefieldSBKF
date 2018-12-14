@@ -14,6 +14,8 @@ namespace BattlefieldSBKF.Models
         public Dictionary<string, int> YcordinateDict { get; set; }
 
         public string ProtocolName { get; } = "BATTLESHIP/1.0";
+        public Responses[] MissHitSunkWinResponses { get; set; }
+
         const string _clientStarts = "Client Starts";
         const string _hostsStarts = "Host Starts";
         const string _miss = "Miss!";
@@ -31,7 +33,7 @@ namespace BattlefieldSBKF.Models
         const string _connectionClosed = "Connection closed";
         const string _syntaxError = "Syntax error";
         const string _sequenceError = "Sequence error";
-
+        const string _help = "Not implemented";
 
 
         public BattleShipProtocol()
@@ -39,6 +41,7 @@ namespace BattlefieldSBKF.Models
             CreateCommandsDict();
             CreateResponsesDict();
             CreateYcordinateDict();
+            CreateMissHitSunkWinResponses();
         }
 
         void CreateCommandsDict()
@@ -80,6 +83,7 @@ namespace BattlefieldSBKF.Models
                 {"255", Responses.SunkPatrolBoat },
                 {"260", Responses.YouWin },
                 {"270", Responses.ConnectionClosed },
+                {"280", Responses.Help },
                 {"500", Responses.SyntaxError },
                 {"501", Responses.SequenceError },
             };
@@ -105,6 +109,25 @@ namespace BattlefieldSBKF.Models
               {"H", 8 },
               {"I", 9 },
               {"J", 10 },
+            };
+        }
+
+        void CreateMissHitSunkWinResponses()
+        {
+            MissHitSunkWinResponses = new Responses[]
+            {
+                Responses.Miss,
+                Responses.HitCarrier,
+                Responses.HitBattleship,
+                Responses.HitDestroyer,
+                Responses.HitSubmarine,
+                Responses.HitPatrolBoat,
+                Responses.SunkCarrier,
+                Responses.SunkBattleship,
+                Responses.SunkDestroyer,
+                Responses.SunkSubmarine,
+                Responses.SunkPatrolBoat,
+                Responses.YouWin,
             };
         }
 
@@ -291,6 +314,10 @@ namespace BattlefieldSBKF.Models
                     tcpResponse = $"{TcpResponsesDict[response.Resp]} {_sequenceError}";
                     break;
 
+                case Responses.Help:
+                    tcpResponse = $"{TcpResponsesDict[response.Resp]} {_help}";
+                    break;
+
                 default:
                     throw new CantCreateResponseException($"Can't create tcp response of {response.Resp} because it's not implemented.");
 
@@ -303,7 +330,7 @@ namespace BattlefieldSBKF.Models
         {
             var substrings = tcpCommand.Split(' ');
 
-            var key = substrings[0];
+            var key = substrings[0].ToUpper();
             Command command = null;
 
             if (CommandsDict.ContainsKey(key))
@@ -354,6 +381,9 @@ namespace BattlefieldSBKF.Models
                             throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Must be at least one parameter for this command.");
                         break;
                     case Commands.Quit:
+                        command = new Command(commandEnum, null);
+                        break;
+                    case Commands.Help:
                         command = new Command(commandEnum, null);
                         break;
                     default:

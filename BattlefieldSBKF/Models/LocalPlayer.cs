@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class LocalPlayer : IPlayer
+    public class LocalPlayer : ILocalPlayer
     {
         public OceanGridBoard OceanGridBoard { get; set; } = new OceanGridBoard(10, new BattleShipProtocol());
         public TargetGridBoard TargetGridBoard { get; set;} = new TargetGridBoard(10, new BattleShipProtocol());
@@ -23,18 +23,7 @@ namespace BattlefieldSBKF.Models
             BattleShipProtocol = batprot;
         }
 
-        public void Connect(string host, int port, string localPlayerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Connect(int port, string localPlayerName)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        public Command GetCommand()
+        public Command GetCommand(params Commands[] validCommands)
         {
 
             throw new NotImplementedException();
@@ -127,17 +116,7 @@ namespace BattlefieldSBKF.Models
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
         }
 
-        public Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Response GetResponse()
-        {
-            throw new NotImplementedException();
-        }
-
-
+  
 
         public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter)
         {
