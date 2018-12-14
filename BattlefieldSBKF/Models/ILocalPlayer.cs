@@ -8,5 +8,6 @@ namespace BattlefieldSBKF.Models
     {
         Response ExecuteCommand(Command command, bool waitForResponse);
         Command GetCommand(params Commands[] validCommands);
+        Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand);
     }
 }
