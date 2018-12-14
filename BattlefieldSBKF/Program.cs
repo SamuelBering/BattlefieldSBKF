@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace BattlefieldSBKF
 {
-    class Program
+    class Program 
     {
         
         static bool AskUserToPlayAgain()

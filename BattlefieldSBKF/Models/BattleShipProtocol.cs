@@ -358,7 +358,7 @@ namespace BattlefieldSBKF.Models
                     case Commands.Fire:
                         if (substrings.Length > 1)
                         {
-                            string yCordinate = substrings[1].Substring(0, 1), xCordinate = substrings[1].Substring(1);
+                            string yCordinate = substrings[1].Substring(0, 1).ToUpper(), xCordinate = substrings[1].Substring(1);
 
                             bool xCordIsValidNumber = int.TryParse(xCordinate, out int xCordInt);
 

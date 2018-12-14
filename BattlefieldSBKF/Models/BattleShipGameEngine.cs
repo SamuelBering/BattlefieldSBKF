@@ -193,7 +193,7 @@ namespace BattlefieldSBKF.Models
             {
                 if (!_remotePlayer.Connect(_host, _port, _localPlayer.Name))
                     return;
-                var response = _remotePlayer.GetResponse(Responses.HostStarts, Responses.ClientStarts);
+                var response = _remotePlayer.GetResponse(false, Responses.HostStarts, Responses.ClientStarts);
                 if (response.Resp == Responses.HostStarts)
                     localPlayerStart = false;
                 RunAsClient(localPlayerStart);

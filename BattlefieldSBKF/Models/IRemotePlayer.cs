@@ -11,7 +11,7 @@ namespace BattlefieldSBKF.Models
         Response ExecuteCommand(Commands cmd, bool waitForResponse, Responses[] validResponses, params string[] parameters);
         Command ExecuteResponse(Response response, bool waitForCommand, params Commands[] validCommands);
         Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter, params Commands[] validCommands);
-        Response GetResponse(params Responses[] validResponses);
+        Response GetResponse(bool exitImmediatelyOnError, params Responses[] validResponses);
         bool Connect(string host, int port, string localPlayerName);
         bool Connect(int port, string localPlayerName);
 

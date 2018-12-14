@@ -188,6 +188,10 @@ namespace BattlefieldSBKF.Models
                 TargetGridBoard.MarkShot(initialCommand.Parameters[0], initialCommand.Parameters[1], hit: true);
             }
 
+            OceanGridBoard.ShowBoard();
+
+            TargetGridBoard.ShowBoard();
+
             switch (response.Resp)
             {
                 case Responses.HitDestroyer:

@@ -51,7 +51,7 @@ namespace BattlefieldSBKF.Models
             _reader = new WrappedStreamReader(new StreamReader(_networkStream, Encoding.UTF8), IsServer);
             _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
-            Response response = GetResponse(Responses.Protocol);
+            Response response = GetResponse(exitImmediatelyOnError: true, validResponses: Responses.Protocol);
             if (response.Resp == Responses.ConnectionClosed)
                 return false;
 
@@ -107,7 +107,7 @@ namespace BattlefieldSBKF.Models
             _writer.WriteLine(tcpCommand);
 
             if (waitForResponse)
-                response = GetResponse(validResponses);
+                response = GetResponse(false, validResponses);
 
             return response;
 
@@ -129,7 +129,12 @@ namespace BattlefieldSBKF.Models
             while (true)
             {
                 if (errorCount > 3)
+                {
+                    if (!IsServer)
+                        ExecuteResponse(Responses.ConnectionClosed, false);
+
                     throw new ExceededErrorCodesLimitSent($"Number of error codes sent exceeded maxium(3).");
+                }
 
                 try
                 {
@@ -210,7 +215,7 @@ namespace BattlefieldSBKF.Models
         }
 
 
-        public Response GetResponse(params Responses[] validResponses)
+        public Response GetResponse(bool exitImmediatelyOnError, params Responses[] validResponses)
         {
             Command command = null;
             Response response = null;
@@ -219,7 +224,12 @@ namespace BattlefieldSBKF.Models
             while (true)
             {
                 if (errorCount > 3)
+                {
+                    if (!IsServer)
+                        ExecuteResponse(Responses.ConnectionClosed, false);
+
                     throw new ExceededErrorCodesLimitSent($"Number of error codes sent exceeded maxium(3).");
+                }
 
                 try
                 {
@@ -245,6 +255,9 @@ namespace BattlefieldSBKF.Models
                             return response;
                         else
                         {
+                            if (exitImmediatelyOnError)
+                                throw new UnExpectedResponseException($"Received an invalid response: {response.Resp}.");
+
                             ExecuteResponse(Responses.SequenceError, false);
                             errorCount++;
                         }
@@ -264,6 +277,9 @@ namespace BattlefieldSBKF.Models
                         }
                         else
                         {
+                            if (exitImmediatelyOnError)
+                                throw new UnExpectedCommandException($"Received an invalid command: {command.Cmd}.");
+
                             ExecuteResponse(Responses.SequenceError, false);
                             errorCount++;
                         }
@@ -273,6 +289,9 @@ namespace BattlefieldSBKF.Models
                 {
                     if (ex is CantCreateCommandException || ex is CantCreateResponseException)
                     {
+                        if (exitImmediatelyOnError)
+                            throw new UnExpectedResponseException($"Received an invalid response from server.");
+
                         ExecuteResponse(Responses.SyntaxError, false);
                         errorCount++;
                     }
@@ -301,7 +320,7 @@ namespace BattlefieldSBKF.Models
 
             if (waitForCommand)
                 command = GetCommand(validCommands);
-           
+
             return command;
         }
 
