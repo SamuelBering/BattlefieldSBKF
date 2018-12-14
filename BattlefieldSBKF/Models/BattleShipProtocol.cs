@@ -49,6 +49,7 @@ namespace BattlefieldSBKF.Models
             CommandsDict = new Dictionary<string, Commands>()
             {
                 {"HELLO",Commands.Hello },
+                {"HELO",Commands.Helo },
                 {"START", Commands.Start },
                 {"FIRE",Commands.Fire },
                  {"HELP", Commands.Help },
@@ -347,13 +348,17 @@ namespace BattlefieldSBKF.Models
                         else
                             throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Parameter for Name is invalid.");
                         break;
-                    case Commands.Start:
-                        if (substrings.Length == 1)
+                    case Commands.Helo:
+                        if (substrings.Length > 1 && substrings[1].Length > 0)
                         {
-                            command = new Command(commandEnum, null);
+                            command = new Command(commandEnum, substrings.Skip(1).Take(substrings.Length - 1).ToArray());
                         }
                         else
-                            throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. No parameter is allowed for this command.");
+                            throw new CantCreateCommandException($"Can't create command of input string {tcpCommand}. Parameter for Name is invalid.");
+                        break;
+
+                    case Commands.Start:
+                        command = new Command(commandEnum, null);
                         break;
                     case Commands.Fire:
                         if (substrings.Length > 1)
@@ -416,6 +421,14 @@ namespace BattlefieldSBKF.Models
                     else
                         throw new CantCreateCommandException($"Can't create tcp tcp command of command {command.Cmd}. Invalid parameters.");
                     break;
+                case Commands.Helo:
+                    if (command.Parameters.Length > 0 && command.Parameters[0].Length > 0)
+                    {
+                        tcpCommand = $"{TcpCommandsDict[command.Cmd]} {string.Join(' ', command.Parameters)}";
+                    }
+                    else
+                        throw new CantCreateCommandException($"Can't create tcp tcp command of command {command.Cmd}. Invalid parameters.");
+                    break;
                 case Commands.Start:
                     if (command.Parameters == null)
                     {
@@ -427,7 +440,8 @@ namespace BattlefieldSBKF.Models
                 case Commands.Fire:
                     if (command.Parameters.Length == 2 || command.Parameters.Length == 3)
                     {
-                        string yCordinate = command.Parameters[0], message = command.Parameters.Length == 3 ? command.Parameters[2] : null;
+                        string yCordinate = command.Parameters[0],
+                            message = command.Parameters.Length > 2 ? string.Join(' ', command.Parameters.Skip(2).Take(command.Parameters.Length - 2).ToArray()) : null;
                         bool xCordIsValidNumber = int.TryParse(command.Parameters[1], out int xCordinate);
 
                         if (YcordinateDict.ContainsKey(yCordinate) && (xCordIsValidNumber && xCordinate >= 1 && xCordinate <= 10))

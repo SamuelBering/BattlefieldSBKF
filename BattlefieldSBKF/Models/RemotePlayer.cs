@@ -55,8 +55,15 @@ namespace BattlefieldSBKF.Models
             if (response.Resp == Responses.ConnectionClosed)
                 return false;
 
-            response = ExecuteCommand(Commands.Hello, waitForResponse: true,
+            response = ExecuteCommand(Commands.Helo, waitForResponse: true,
+                validResponses: new Responses[] { Responses.PlayerName, Responses.SyntaxError }, parameters: localPlayerName);
+
+            if (response.Resp == Responses.SyntaxError)
+            {
+                response = ExecuteCommand(Commands.Hello, waitForResponse: true,
                 validResponses: new Responses[] { Responses.PlayerName }, parameters: localPlayerName);
+            }
+
             if (response.Resp == Responses.ConnectionClosed)
                 return false;
 
@@ -85,7 +92,8 @@ namespace BattlefieldSBKF.Models
             _writer = new WrappedStreamWriter(new StreamWriter(_networkStream, Encoding.UTF8) { AutoFlush = true }, IsServer);
 
 
-            Command command = ExecuteResponse(Responses.Protocol, waitForCommand: true, parameter: null, validCommands: Commands.Hello);
+            Command command = ExecuteResponse(Responses.Protocol, waitForCommand: true,
+                            parameter: null, validCommands: new Commands[] { Commands.Hello, Commands.Helo });
             if (command.Cmd == Commands.Quit)
                 return false;
 

@@ -7,6 +7,7 @@ namespace BattlefieldSBKF.Models
     public enum Commands
     {
         Hello,
+        Helo,
         Start,
         Fire,
         Help,
