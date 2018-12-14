@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class LocalPlayer : IPlayer
+    public class LocalPlayer : ILocalPlayer
     {
         public OceanGridBoard OceanGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public TargetGridBoard TargetGridBoard { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -21,17 +21,6 @@ namespace BattlefieldSBKF.Models
         {
             Name = name;
         }
-
-        public bool Connect(string host, int port, string localPlayerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Connect(int port, string localPlayerName)
-        {
-            throw new NotImplementedException();
-        }
-
 
         public Command GetCommand(params Commands[] validCommands)
         {
@@ -120,17 +109,7 @@ namespace BattlefieldSBKF.Models
                 throw new UnExpectedCommandException($"Expected command {Commands.Fire} but instead got: {command.Cmd}");
         }
 
-        public Response ExecuteCommand(Commands cmd, bool waitForResponse, params string[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Response GetResponse(params Responses[] validResponses)
-        {
-            throw new NotImplementedException();
-        }
-
-
+  
 
         public Command ExecuteResponse(Responses resp, bool waitForCommand, string parameter)
         {
@@ -154,24 +133,6 @@ namespace BattlefieldSBKF.Models
             return command;
         }
 
-        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Response ExecuteCommand(Command command, bool waitForResponse, params Responses[] validResponses)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Response ExecuteCommand(Commands cmd, bool waitForResponse, Responses[] validResponses, params string[] parameters)
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }

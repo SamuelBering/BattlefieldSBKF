@@ -8,7 +8,7 @@ using System.Text;
 
 namespace BattlefieldSBKF.Models
 {
-    public class RemotePlayer : IPlayer
+    public class RemotePlayer : IRemotePlayer
     {
 
         WrappedStreamReader _reader;
@@ -66,7 +66,7 @@ namespace BattlefieldSBKF.Models
 
             this.Name = response.Parameter;
             Console.WriteLine($"Du spelar mot: {this.Name}\tIpaddress: {_client.Client.RemoteEndPoint}");
-            response = ExecuteCommand(Commands.Start, false, null,null);
+            response = ExecuteCommand(Commands.Start, waitForResponse: false, validResponses: null, parameters: null);
             return true;
         }
 
@@ -185,6 +185,7 @@ namespace BattlefieldSBKF.Models
                     {
                         if (response.Resp == Responses.ConnectionClosed && IsServer)
                         {
+                            command = new Command(Commands.Quit, null);
                             return command;
                         }
                         else
@@ -364,11 +365,6 @@ namespace BattlefieldSBKF.Models
         {
             Response response = new Response(resp, parameter);
             return ExecuteResponse(response, waitForCommand, validCommands);
-        }
-
-        public Command ExecuteResponse(Response response, Command initialCommand, bool waitForCommand)
-        {
-            throw new NotImplementedException();
         }
 
         public void Dispose()
