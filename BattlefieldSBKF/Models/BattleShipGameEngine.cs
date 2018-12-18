@@ -47,6 +47,8 @@ namespace BattlefieldSBKF.Models
                         return;
                     }
                     _localPlayer.ExecuteResponse(response, command, false, ref endGame);
+                    if (endGame)
+                        _remotePlayer.ExecuteResponse(Responses.ConnectionClosed, waitForCommand: false, parameter: null, validCommands: null);
                     return;
                 }
                 else
@@ -82,6 +84,9 @@ namespace BattlefieldSBKF.Models
                 }
 
                 _localPlayer.ExecuteResponse(response, command, false, ref endGame);
+                if (endGame)
+                    _remotePlayer.ExecuteCommand(Commands.Quit, waitForResponse: true, validResponses: new Responses[] { Responses.ConnectionClosed }, parameters: null);
+
                 return;
 
             }
@@ -108,7 +113,10 @@ namespace BattlefieldSBKF.Models
             }
 
             Response response = _localPlayer.ExecuteCommand(command, true, ref endGame);
-            _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
+            if (endGame)
+                _remotePlayer.ExecuteResponse(response, waitForCommand: true, validCommands: Commands.Quit);
+            else
+                _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
 
             return;
         }
@@ -123,7 +131,11 @@ namespace BattlefieldSBKF.Models
             }
 
             Response response = _localPlayer.ExecuteCommand(command, true, ref endGame);
-            _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
+
+            if (endGame)
+                _remotePlayer.ExecuteResponse(response, waitForCommand: true, validCommands: Commands.Quit);
+            else
+                _remotePlayer.ExecuteResponse(response, waitForCommand: false, validCommands: null);
             return;
 
         }
@@ -193,7 +205,7 @@ namespace BattlefieldSBKF.Models
             {
                 Console.WriteLine("Väntar på anslutning...");
                 if (!_remotePlayer.Connect(_port, _localPlayer.Name))
-                    return;                
+                    return;
                 Random rnd = new Random();
                 localPlayerStart = rnd.Next(0, 2) == 1 ? true : false;
                 //localPlayerStart = true;
